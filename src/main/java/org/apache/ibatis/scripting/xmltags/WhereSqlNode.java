@@ -28,6 +28,7 @@ public class WhereSqlNode extends TrimSqlNode {
   private static List<String> prefixList = Arrays.asList("AND ","OR ","AND\n", "OR\n", "AND\r", "OR\r", "AND\t", "OR\t");
 
   public WhereSqlNode(Configuration configuration, SqlNode contents) {
+    //WhereSqlNode 和 SetSqlNode 都是基于 TrimSqlNode 实现的
     super(configuration, contents, "WHERE", prefixList, null, null);
   }
 

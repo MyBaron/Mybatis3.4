@@ -38,7 +38,14 @@ public class DynamicContext {
     OgnlRuntime.setPropertyAccessor(ContextMap.class, new ContextAccessor());
   }
 
+  /**
+   * bindings 则用于存储一些额外的信息，比如运行时参数 和 databaseId 等
+   * todo databaseId是什么？
+   */
   private final ContextMap bindings;
+  /**
+   * sqlBuilder 变量用于存放 SQL 片段的解析结果
+   */
   private final StringBuilder sqlBuilder = new StringBuilder();
   private int uniqueNumber = 0;
 

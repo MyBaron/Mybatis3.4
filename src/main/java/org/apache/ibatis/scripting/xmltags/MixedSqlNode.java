@@ -29,6 +29,10 @@ public class MixedSqlNode implements SqlNode {
 
   @Override
   public boolean apply(DynamicContext context) {
+    /**
+     * 这种设计模式不错
+     * 以后扩展需要增加处理方法，只需要继承SqlNode类重写apply方法就可以支持
+     */
     for (SqlNode sqlNode : contents) {
       sqlNode.apply(context);
     }

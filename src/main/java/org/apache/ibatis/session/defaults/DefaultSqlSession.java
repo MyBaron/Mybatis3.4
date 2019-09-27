@@ -144,7 +144,24 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
     try {
+      //根据调用的方法获取MappedStatement
+
+      /**
+       *  什么是MappedStatement？
+       *  在初始化配置文件的时候，会将mapper节点的数据存储在MappedStatement
+       */
+
       MappedStatement ms = configuration.getMappedStatement(statement);
+      //默认对象是CachingExecutor
+      /**
+       * todo  区别？使用场景？ 初始化在哪个阶段
+       * BaseExecutor
+       * BatchExecutor
+       * CachingExecutor
+       * ClosedExecutor
+       * ReuseExecutor
+       * SimpleExecutor
+       */
       return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);

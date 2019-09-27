@@ -162,6 +162,7 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldFailWithTooManyResultsException() throws Exception {
     SqlSession session = sqlMapper.openSession(TransactionIsolationLevel.SERIALIZABLE);
     try {
+      //查询数据
       session.selectOne("org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAllAuthors");
     } finally {
       session.close();
@@ -248,6 +249,11 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldSelectOneAuthorWithInlineParams() throws Exception {
     SqlSession session = sqlMapper.openSession();
     try {
+      /**
+       * todo 区别？使用场景？
+       * DefaultSqlSession
+       * SqlSessionManager
+       */
       Author author = session.selectOne(
           "org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAuthorWithInlineParams", new Author(101));
       assertEquals(101, author.getId());

@@ -68,21 +68,53 @@ public class SqlSourceBuilder extends BaseBuilder {
       return "?";
     }
 
+
+    /*
+     * 将 #{xxx} 占位符中的内容解析成 Map。大家可能很好奇一个普通的字符串是怎么解析成 Map 的，
+     * 举例说明一下。如下：
+     *
+     *    #{age,javaType=int,jdbcType=NUMERIC,typeHandler=MyTypeHandler}
+     *
+     * 上面占位符中的内容最终会被解析成如下的结果：
+     *
+     *  {
+     *      "property": "age",
+     *      "typeHandler": "MyTypeHandler",
+     *      "jdbcType": "NUMERIC",
+     *      "javaType": "int"
+     *  }
+     *
+     * parseParameterMapping 内部依赖 ParameterExpression 对字符串进行解析，ParameterExpression 的
+     * 逻辑不是很复杂，这里就不分析了。大家若有兴趣，可自行分析
+     */
     private ParameterMapping buildParameterMapping(String content) {
       Map<String, String> propertiesMap = parseParameterMapping(content);
       String property = propertiesMap.get("property");
       Class<?> propertyType;
       if (metaParameters.hasGetter(property)) { // issue #448 get type from additional params
         propertyType = metaParameters.getGetterType(property);
+
       } else if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
+        /*
+         * parameterType 是运行时参数的类型。如果用户传入的是单个参数，比如 Article 对象，此时
+         * parameterType 为 Article.class。如果用户传入的多个参数，比如 [id = 1, author = "coolblog"]，
+         * MyBatis 会使用 ParamMap 封装这些参数，此时 parameterType 为 ParamMap.class。如果
+         * parameterType 有相应的 TypeHandler，这里则把 parameterType 设为 propertyType
+         */
         propertyType = parameterType;
       } else if (JdbcType.CURSOR.name().equals(propertiesMap.get("jdbcType"))) {
         propertyType = java.sql.ResultSet.class;
       } else if (property == null || Map.class.isAssignableFrom(parameterType)) {
         propertyType = Object.class;
       } else {
+        /*
+         * 代码逻辑走到此分支中，表明 parameterType 是一个自定义的类，
+         * 比如 Article，此时为该类创建一个元信息对象
+         */
         MetaClass metaClass = MetaClass.forClass(parameterType, configuration.getReflectorFactory());
+        // 检测参数对象有没有与 property 想对应的 getter 方法
         if (metaClass.hasGetter(property)) {
+          // 获取成员变量的类型
           propertyType = metaClass.getGetterType(property);
         } else {
           propertyType = Object.class;
@@ -118,8 +150,11 @@ public class SqlSourceBuilder extends BaseBuilder {
         }
       }
       if (typeHandlerAlias != null) {
+        // 解析 TypeHandler
         builder.typeHandler(resolveTypeHandler(javaType, typeHandlerAlias));
       }
+
+      // 构建 ParameterMapping 对象
       return builder.build();
     }
 

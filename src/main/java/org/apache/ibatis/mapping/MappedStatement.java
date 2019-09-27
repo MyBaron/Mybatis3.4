@@ -289,9 +289,26 @@ public final class MappedStatement {
   }
   
   public BoundSql getBoundSql(Object parameterObject) {
+    // 调用 sqlSource 的 getBoundSql 获取 BoundSql
+    // 内部会创建一个BoundSql对象
+    /**
+     * todo 需要了解 SqlSource是什么时候创建的
+     * 在处理配置文件阶段，XMLScriptBuilder对针对SQL片段是否 动态 而选择创建 DynamicSqlSource 还是 RawSqlSource
+     *
+     * DynamicSqlSource     当 SQL 配置中包含 ${} 占位符，或者包含 <if>、<where> 等标签时，会被认为是动态 SQL，此时使用 DynamicSqlSource 存储 SQL 片段
+     * RawSqlSource  RawSqlSource解析含有 #{} 的sql语句
+     * StaticSqlSource
+     * ProviderSqlSource
+     * VelocitySqlSource
+     */
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings == null || parameterMappings.isEmpty()) {
+      /*
+       * 创建新的 BoundSql，这里的 parameterMap 是 ParameterMap 类型。
+       * 由<ParameterMap> 节点进行配置，该节点已经废弃，不推荐使用。默认情况下，
+       * parameterMap.getParameterMappings() 返回空集合
+       */
       boundSql = new BoundSql(configuration, boundSql.getSql(), parameterMap.getParameterMappings(), parameterObject);
     }
 

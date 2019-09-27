@@ -97,10 +97,10 @@
 		from author where id = ?
 	</select>
 
-	<select id="selectImmutableAuthor" parameterMap="selectAuthor"
+	<select id="selectImmutableAuthor" parameterType="Author"
 		resultMap="selectImmutableAuthor">
 		select id, username, password, email, bio, favourite_section
-		from author where id = ?
+		from author where id = ${id}
 	</select>
 
 	<select id="selectAuthorWithInlineParams" parameterType="int"

@@ -31,7 +31,12 @@ public class IfSqlNode implements SqlNode {
 
   @Override
   public boolean apply(DynamicContext context) {
+    //// 通过 ONGL 评估 test 表达式的结果
     if (evaluator.evaluateBoolean(test, context.getBindings())) {
+      /**
+       * 需要注意的是 <if> 节点中也可嵌套其他的动态节点，并非只有纯文本。
+       * 因此 contents 变量遍历指向的是 MixedSqlNode，而非 StaticTextSqlNode。
+       */
       contents.apply(context);
       return true;
     }
