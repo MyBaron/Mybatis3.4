@@ -68,8 +68,7 @@ public class SqlSourceBuilder extends BaseBuilder {
       return "?";
     }
 
-
-    /*
+    /**
      * 将 #{xxx} 占位符中的内容解析成 Map。大家可能很好奇一个普通的字符串是怎么解析成 Map 的，
      * 举例说明一下。如下：
      *
@@ -86,21 +85,29 @@ public class SqlSourceBuilder extends BaseBuilder {
      *
      * parseParameterMapping 内部依赖 ParameterExpression 对字符串进行解析，ParameterExpression 的
      * 逻辑不是很复杂，这里就不分析了。大家若有兴趣，可自行分析
+     * @param content
+     * @return
      */
     private ParameterMapping buildParameterMapping(String content) {
       Map<String, String> propertiesMap = parseParameterMapping(content);
       String property = propertiesMap.get("property");
       Class<?> propertyType;
-      if (metaParameters.hasGetter(property)) { // issue #448 get type from additional params
+      // issue #448 get type from additional params
+      //todo MetaObject 是什么？什么时候创建的
+      if (metaParameters.hasGetter(property)) {
         propertyType = metaParameters.getGetterType(property);
 
-      } else if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
+
         /*
          * parameterType 是运行时参数的类型。如果用户传入的是单个参数，比如 Article 对象，此时
          * parameterType 为 Article.class。如果用户传入的多个参数，比如 [id = 1, author = "coolblog"]，
          * MyBatis 会使用 ParamMap 封装这些参数，此时 parameterType 为 ParamMap.class。如果
          * parameterType 有相应的 TypeHandler，这里则把 parameterType 设为 propertyType
+         *
+         * TypeHandler 是类型转换器
+         *
          */
+      } else if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
         propertyType = parameterType;
       } else if (JdbcType.CURSOR.name().equals(propertiesMap.get("jdbcType"))) {
         propertyType = java.sql.ResultSet.class;
@@ -120,6 +127,13 @@ public class SqlSourceBuilder extends BaseBuilder {
           propertyType = Object.class;
         }
       }
+
+
+      /**
+       * 此处是处理#{}占位符的里面的内容，例如#{regTime,javaType=Date,jdbcType=VARCHAR,typeHandler=MyDateTypeHandler}
+       *
+       * 处理的数据会存在ParameterMapping对象中
+       */
       ParameterMapping.Builder builder = new ParameterMapping.Builder(configuration, property, propertyType);
       Class<?> javaType = propertyType;
       String typeHandlerAlias = null;

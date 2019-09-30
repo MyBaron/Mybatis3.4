@@ -292,12 +292,12 @@ public final class MappedStatement {
     // 调用 sqlSource 的 getBoundSql 获取 BoundSql
     // 内部会创建一个BoundSql对象
     /**
-     * todo 需要了解 SqlSource是什么时候创建的
+     *  需要了解 SqlSource是什么时候创建的?
      * 在处理配置文件阶段，XMLScriptBuilder对针对SQL片段是否 动态 而选择创建 DynamicSqlSource 还是 RawSqlSource
      *
      * DynamicSqlSource     当 SQL 配置中包含 ${} 占位符，或者包含 <if>、<where> 等标签时，会被认为是动态 SQL，此时使用 DynamicSqlSource 存储 SQL 片段
-     * RawSqlSource  RawSqlSource解析含有 #{} 的sql语句
-     * StaticSqlSource
+     * RawSqlSource  RawSqlSource解析含有 #{} 的sql语句，其他内部还是StaticSqlSource，因为初始化xml的时候，已经把#{}的sql处理完了
+     * StaticSqlSource  静态SQL处理，内部是直接创建BoundSql对象
      * ProviderSqlSource
      * VelocitySqlSource
      */

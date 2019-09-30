@@ -71,11 +71,15 @@ public class TextSqlNode implements SqlNode {
       Object parameter = context.getBindings().get("_parameter");
       if (parameter == null) {
         context.getBindings().put("value", null);
+
+        //判断参数是否基本类型
       } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {
         context.getBindings().put("value", parameter);
       }
+      //获取值
       Object value = OgnlCache.getValue(content, context.getBindings());
-      String srtValue = (value == null ? "" : String.valueOf(value)); // issue #274 return "" instead of "null"
+      // issue #274 return "" instead of "null"
+      String srtValue = (value == null ? "" : String.valueOf(value));
       checkInjection(srtValue);
       return srtValue;
     }

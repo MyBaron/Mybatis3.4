@@ -45,7 +45,7 @@ public class DynamicSqlSource implements SqlSource {
      */
     DynamicContext context = new DynamicContext(configuration, parameterObject);
     /**
-     *   SqlNode的实现类时MixedSqlNode
+     *   SqlNode的实现类是MixedSqlNode
      *   MixedSqlNode 内部维护了一个 SqlNode 集合，用于存储各种各样的 SqlNode
      *   此处会处理DynamicContext对象的sql中有${},if,while 等等的占位符，会将参数替换占位符
      */
