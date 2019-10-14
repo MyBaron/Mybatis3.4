@@ -49,6 +49,12 @@ public class ResultSetWrapper {
   private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<String, List<String>>();
   private final Map<String, List<String>> unMappedColumnNamesMap = new HashMap<String, List<String>>();
 
+  /**
+   * ResultSetWrapper 中包含了 ResultSet 一些元信息，比如列名称、每列对应的 JdbcType、
+   * 以及每列对应的 Java 类名（class name，譬如 java.lang.String）等。
+   */
+
+
   public ResultSetWrapper(ResultSet rs, Configuration configuration) throws SQLException {
     super();
     this.typeHandlerRegistry = configuration.getTypeHandlerRegistry();
@@ -141,15 +147,24 @@ public class ResultSetWrapper {
     List<String> mappedColumnNames = new ArrayList<String>();
     List<String> unmappedColumnNames = new ArrayList<String>();
     final String upperColumnPrefix = columnPrefix == null ? null : columnPrefix.toUpperCase(Locale.ENGLISH);
+    // 为 <resultMap> 中的列名拼接前缀
     final Set<String> mappedColumns = prependPrefixes(resultMap.getMappedColumns(), upperColumnPrefix);
+
+    /*
+     * 遍历 columnNames，columnNames 是 ResultSetWrapper 的成员变量，
+     * 保存了当前结果集中的所有列名
+     */
     for (String columnName : columnNames) {
       final String upperColumnName = columnName.toUpperCase(Locale.ENGLISH);
+      // 检测已映射列名集合中是否包含当前列名
       if (mappedColumns.contains(upperColumnName)) {
         mappedColumnNames.add(upperColumnName);
       } else {
+        // 将列名存入 unmappedColumnNames 中
         unmappedColumnNames.add(columnName);
       }
     }
+    // 缓存列名集合
     mappedColumnNamesMap.put(getMapKey(resultMap, columnPrefix), mappedColumnNames);
     unMappedColumnNamesMap.put(getMapKey(resultMap, columnPrefix), unmappedColumnNames);
   }
@@ -166,7 +181,9 @@ public class ResultSetWrapper {
   public List<String> getUnmappedColumnNames(ResultMap resultMap, String columnPrefix) throws SQLException {
     List<String> unMappedColumnNames = unMappedColumnNamesMap.get(getMapKey(resultMap, columnPrefix));
     if (unMappedColumnNames == null) {
+      // 加载已映射与未映射列名
       loadMappedAndUnmappedColumnNames(resultMap, columnPrefix);
+      // 获取未映射列名
       unMappedColumnNames = unMappedColumnNamesMap.get(getMapKey(resultMap, columnPrefix));
     }
     return unMappedColumnNames;

@@ -555,7 +555,12 @@ public class Configuration {
   }
 
   public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    /**
+     * RoutingStatementHandler 作用是什么？
+     * 创建具有路由功能的 StatementHandler
+     */
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
+    // 应用插件到 StatementHandler 上
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
     return statementHandler;
   }

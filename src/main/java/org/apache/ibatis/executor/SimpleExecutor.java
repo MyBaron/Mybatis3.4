@@ -58,7 +58,13 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
-      // todo 创建 StatementHandler   StatementHandler是什么？有什么作用
+      /**
+       * todo 创建 StatementHandler   StatementHandler是什么？有什么作用
+       * 下面3个实现类有什么区别
+       * SimpleStatementHandler
+       * PreparedStatementHandler
+       * CallableStatementHandler
+       */
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
       stmt = prepareStatement(handler, ms.getStatementLog());
       return handler.<E>query(stmt, resultHandler);

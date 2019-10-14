@@ -24,6 +24,8 @@ public class DefaultResultContext<T> implements ResultContext<T> {
 
   private T resultObject;
   private int resultCount;
+
+  /** 状态字段   表明结果上下文的状态。在处理多行数据时，MyBatis 会检查该字段的值，已决定是否需要进行后续的处理*/
   private boolean stopped;
 
   public DefaultResultContext() {

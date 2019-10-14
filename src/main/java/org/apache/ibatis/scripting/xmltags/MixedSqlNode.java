@@ -21,7 +21,25 @@ import java.util.List;
  * @author Clinton Begin
  */
 public class MixedSqlNode implements SqlNode {
+
+  /**
+   * MixedSqlNode内部管理了SqlNode的实现类
+   *
+   * ChooseSqlNode
+   * ForEachSqlNode
+   * IfSqlNode
+   * StaticTextSqlNode
+   * TextSqlNode
+   * TrimSqlNode
+   * VarDeclSqlNode
+   * WhereSqlNode
+   * SetSqlNode
+   *
+   * WhereSqlNode 和 SetSqlNode 都是基于 TrimSqlNode 实现的
+   */
   private final List<SqlNode> contents;
+
+
 
   public MixedSqlNode(List<SqlNode> contents) {
     this.contents = contents;
