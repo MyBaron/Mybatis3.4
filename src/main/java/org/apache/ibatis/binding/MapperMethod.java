@@ -98,6 +98,12 @@ public class MapperMethod {
 
   private Object rowCountResult(int rowCount) {
     final Object result;
+    /*
+     * 这里的 method 类型为 MethodSignature，即方法签名，包含了某个方法较为详细的信息。
+     * 某个方法指的是 Mapper 或 Dao 接口中的方法
+     *
+     * 从这里的代码可以看到，插入/更新方法支持返回值有 void,int,long,boolean类型
+     */
     if (method.returnsVoid()) {
       result = null;
     } else if (Integer.class.equals(method.getReturnType()) || Integer.TYPE.equals(method.getReturnType())) {

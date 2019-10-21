@@ -45,7 +45,15 @@ public class PreparedStatementHandler extends BaseStatementHandler {
     PreparedStatement ps = (PreparedStatement) statement;
     ps.execute();
     int rows = ps.getUpdateCount();
+    // 获取用户传入的参数值，参数值类型可能是普通的实体类，也可能是 Map
     Object parameterObject = boundSql.getParameterObject();
+    // 获取自增主键的值，并将值填入到参数对象中
+    /**
+     * KeyGenerator 有3个实现类
+     * Jdbc3KeyGenerator 用于获取插入数据后的自增主键数值
+     * SelectKeyGenerator
+     * NoKeyGenerator 这是一个空实现
+     */
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     keyGenerator.processAfter(executor, mappedStatement, ps, parameterObject);
     return rows;
@@ -73,6 +81,9 @@ public class PreparedStatementHandler extends BaseStatementHandler {
 
   @Override
   protected Statement instantiateStatement(Connection connection) throws SQLException {
+    /**
+     * 此处是可从数据源中获取连接，或者直接创建连接
+     */
     String sql = boundSql.getSql();
     // 根据条件调用不同的 prepareStatement 方法创建 PreparedStatement
     if (mappedStatement.getKeyGenerator() instanceof Jdbc3KeyGenerator) {

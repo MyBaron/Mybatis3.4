@@ -60,22 +60,32 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
   public void processBatch(MappedStatement ms, Statement stmt, Collection<Object> parameters) {
     ResultSet rs = null;
     try {
+      /**
+       * todo 为什么插入/更新操作 resultSet会有数据返回
+       */
       rs = stmt.getGeneratedKeys();
       final Configuration configuration = ms.getConfiguration();
       final TypeHandlerRegistry typeHandlerRegistry = configuration.getTypeHandlerRegistry();
+      // 获取主键字段
       final String[] keyProperties = ms.getKeyProperties();
+      // 获取结果集 ResultSet 的元数据
       final ResultSetMetaData rsmd = rs.getMetaData();
       TypeHandler<?>[] typeHandlers = null;
+      // ResultSet 中数据的列数要大于等于主键的数量
       if (keyProperties != null && rsmd.getColumnCount() >= keyProperties.length) {
+        // 遍历 parameters
         for (Object parameter : parameters) {
           // there should be one row for each statement (also one for each parameter)
+          // 对于批量插入，ResultSet 会返回多行数据
           if (!rs.next()) {
             break;
           }
+          // 为每个主键属性获取 TypeHandler
           final MetaObject metaParam = configuration.newMetaObject(parameter);
           if (typeHandlers == null) {
             typeHandlers = getTypeHandlers(typeHandlerRegistry, metaParam, keyProperties, rsmd);
           }
+          // 填充结果到运行时参数中
           populateKeys(rs, metaParam, keyProperties, typeHandlers);
         }
       }
@@ -97,6 +107,11 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
     if (parameter instanceof Collection) {
       parameters = (Collection) parameter;
     } else if (parameter instanceof Map) {
+      /*
+       * 如果 parameter 是 Map 类型，则从其中提取指定 key 对应的值。
+       * 至于 Map 中为什么会出现 collection/list/array 等键。大家
+       * 可以参考 DefaultSqlSession 的 wrapCollection 方法
+       */
       Map parameterMap = (Map) parameter;
       if (parameterMap.containsKey("collection")) {
         parameters = (Collection) parameterMap.get("collection");
@@ -131,11 +146,15 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
   }
 
   private void populateKeys(ResultSet rs, MetaObject metaParam, String[] keyProperties, TypeHandler<?>[] typeHandlers) throws SQLException {
+    // 遍历 keyProperties
     for (int i = 0; i < keyProperties.length; i++) {
+      // 获取主键属性
       String property = keyProperties[i];
       TypeHandler<?> th = typeHandlers[i];
       if (th != null) {
+        // 从 ResultSet 中获取某列的值
         Object value = th.getResult(rs, i + 1);
+        // 设置结果值到运行时参数中
         metaParam.setValue(property, value);
       }
     }

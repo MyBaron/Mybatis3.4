@@ -190,7 +190,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     ResultSetWrapper rsw = getFirstResultSet(stmt);
 
     /**
-     *    ResultMap 是什么？
+     * ResultMap 是什么？
      *   结果映射
      *   MappedStatement存储初始化的时候处理<mapper></mapper>的内容
      *
@@ -398,7 +398,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
      */
     skipRows(rsw.getResultSet(), rowBounds);
     // 检测是否还有更多行的数据需要处理
-    //此处处理结果的所有行数
+    // 此处处理结果的所有行数
     while (shouldProcessMoreRows(resultContext, rowBounds) && rsw.getResultSet().next()) {
       // 获取经过鉴别器处理后的 ResultMap
       ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(rsw.getResultSet(), resultMap, null);
@@ -568,7 +568,6 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    * 5.获取属性类型
    * 6.获取类型处理器
    * 7.创建 UnMappedColumnAutoMapping 实例
-
    */
   private List<UnMappedColumnAutoMapping> createAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
     final String mapKey = resultMap.getId() + ":" + columnPrefix;
@@ -635,6 +634,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     if (!autoMapping.isEmpty()) {
       // 通过 TypeHandler 从结果集中获取指定列的数据
       for (UnMappedColumnAutoMapping mapping : autoMapping) {
+        //获取到该行该列的数据
         final Object value = mapping.typeHandler.getResult(rsw.getResultSet(), mapping.column);
         if (value != null) {
           foundValues = true;
@@ -737,6 +737,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     final Class<?> resultType = resultMap.getType();
     final MetaClass metaType = MetaClass.forClass(resultType, reflectorFactory);
     // 获取 <constructor> 节点对应的 ResultMapping
+    // constructor构造方法，用于初始化配置
     final List<ResultMapping> constructorMappings = resultMap.getConstructorResultMappings();
 
     /*

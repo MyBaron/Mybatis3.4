@@ -49,6 +49,7 @@ public class BoundSql {
   private final Object parameterObject;
   /**
    * 附加参数集合，用于存储一些额外的信息
+   * todo 需要了解
    */
   private final Map<String, Object> additionalParameters;
   /**

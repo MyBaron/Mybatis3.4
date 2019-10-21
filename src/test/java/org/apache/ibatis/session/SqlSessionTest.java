@@ -33,6 +33,7 @@ import javassist.util.proxy.Proxy;
 
 import org.apache.ibatis.BaseDataTest;
 import org.apache.ibatis.binding.BindingException;
+import org.apache.ibatis.cache.Cache;
 import org.apache.ibatis.cache.impl.PerpetualCache;
 import org.apache.ibatis.domain.blog.Author;
 import org.apache.ibatis.domain.blog.Blog;
@@ -50,6 +51,7 @@ import org.apache.ibatis.exceptions.TooManyResultsException;
 import org.apache.ibatis.executor.result.DefaultResultHandler;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.defaults.DefaultSqlSessionFactory;
+import org.apache.velocity.util.ArrayListWrapper;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,6 +69,15 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldResolveBothSimpleNameAndFullyQualifiedName() {
+    /**
+     * 测试Cache可以根据全限定类名或者类型来获取到缓存
+     * 原理：
+     * 存储缓存对象的数据结构是StrictMap。
+     * 在put源码中，会存储2个实体或者1个实体：（全限定路径作为key和类名作为key）
+     * 1.如果传入的key包含有.，那么会将key按.切割，只用类名作为key。
+     * 2.会以全限定名作为key存储
+     * 所以就算用全限定类名，内部也只是用类名作为key
+     */
     Configuration c = new Configuration();
     final String fullName = "com.mycache.MyCache";
     final String shortName = "MyCache";
@@ -76,8 +87,12 @@ public class SqlSessionTest extends BaseDataTest {
     assertEquals(cache, c.getCache(shortName));
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test
   public void shouldFailOverToMostApplicableSimpleName() {
+    /**
+     * 这里会抛出Caches collection does not contain value for unknown.namespace.MyCache的异常
+     * 因为在caches的Map中，没有找到unknown.namespace.MyCache对应的值，所以就会抛出错误
+     */
     Configuration c = new Configuration();
     final String fullName = "com.mycache.MyCache";
     final String invalidName = "unknown.namespace.MyCache";
@@ -88,8 +103,15 @@ public class SqlSessionTest extends BaseDataTest {
   }
 
   @Test
-  public void shouldSucceedWhenFullyQualifiedButFailDueToAmbiguity() {
+  public  <V> void shouldSucceedWhenFullyQualifiedButFailDueToAmbiguity() {
     Configuration c = new Configuration();
+    /**
+     * 由上面shouldResolveBothSimpleNameAndFullyQualifiedName的Test中可以知道，caches其实怎么都会保存以类名作为key的实体，
+     * 那么就会出现一种情况，两个类名一样，但是全限定名称却不一样，这种情况下会怎么办呢？
+     * 在这种情况下，在put()源码中，第一次会存储成功，第二次存储时会判断key的值是否存在，如果存在则会用Ambiguity对象作为value。
+     * 此时并不会抛出异常，为什么？因为业务中如果用全限定名称来获取缓存，其实是可以的，并不需要抛出错误。
+     * 如果想通过类名来获取缓存，此时在get()方法中会抛出异常
+     */
 
     final String name1 = "com.mycache.MyCache";
     final PerpetualCache cache1 = new PerpetualCache(name1);
@@ -115,6 +137,9 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldFailToAddDueToNameConflict() {
+    /**
+     * 重复存储的时候也会抛出异常
+     */
     Configuration c = new Configuration();
     final String fullName = "com.mycache.MyCache";
     final PerpetualCache cache = new PerpetualCache(fullName);
@@ -129,6 +154,20 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldOpenAndClose() throws Exception {
+    /**
+     * TransactionIsolationLevel 事务等级
+     * NONE,
+     * READ_COMMITTED 提交读,
+     * READ_UNCOMMITTED 不提交读,
+     * REPEATABLE_READ 可重复读,
+     * SERIALIZABLE;
+     *
+     * SqlSession 完全包含了面向数据库执行 SQL 命令所需的所有方法。可以通过 SqlSession 实例来直接执行已映射的 SQL 语句
+     * 每个线程都应该有它自己的 SqlSession 实例。SqlSession 的实例不是线程安全的，因此是不能被共享的，所以它的最佳的作用域是请求或方法作用域。
+     * 线程不安全在哪里？
+     * 每当用SqlSession生成Mapper代理类时，代理类里面是存储该SqlSession对象的，
+     * 也就是说所有由这个SqlSession对象创建的代理类都是共同访问一个SqlSession对象
+     */
     SqlSession session = sqlMapper.openSession(TransactionIsolationLevel.SERIALIZABLE);
     session.close();
   }
@@ -163,6 +202,10 @@ public class SqlSessionTest extends BaseDataTest {
     SqlSession session = sqlMapper.openSession(TransactionIsolationLevel.SERIALIZABLE);
     try {
       //查询数据
+      /**
+       * selectOne 内部也是调用selectList()方法，返回一个集合
+       * 如果返回的集合的size>1，会抛出异常
+       */
       session.selectOne("org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAllAuthors");
     } finally {
       session.close();
@@ -173,6 +216,10 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldSelectAllAuthorsAsMap() throws Exception {
     SqlSession session = sqlMapper.openSession(TransactionIsolationLevel.SERIALIZABLE);
     try {
+      /**
+       *  内部也是调用selectList()方法，返回一个集合。
+       *  然后通过reflection将集合的对象的mapKey的值获取，并作为map的key
+       */
       final Map<Integer,Author> authors = session.selectMap("org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAllAuthors", "id");
       assertEquals(2, authors.size());
       for(Map.Entry<Integer,Author> authorEntry : authors.entrySet()) {
@@ -187,6 +234,10 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldSelectCountOfPosts() throws Exception {
     SqlSession session = sqlMapper.openSession();
     try {
+      /**
+       *  内部也是调用selectList()方法，返回一个集合。
+       *  该集合只有一个值
+       */
       Integer count = session.selectOne("org.apache.ibatis.domain.blog.mappers.BlogMapper.selectCountOfPosts");
       assertEquals(5, count.intValue());
     } finally {
@@ -198,6 +249,10 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldEnsureThatBothEarlyAndLateResolutionOfNesteDiscriminatorsResolesToUseNestedResultSetHandler() throws Exception {
     SqlSession session = sqlMapper.openSession();
     try {
+      /**
+       * 测试是否成功加载了<ResultMap></ResultMap>
+       * 判断是否存在嵌套ResultMap
+       */
       Configuration configuration = sqlMapper.getConfiguration();
       assertTrue(configuration.getResultMap("org.apache.ibatis.domain.blog.mappers.BlogMapper.earlyNestedDiscriminatorPost").hasNestedResultMaps());
       assertTrue(configuration.getResultMap("org.apache.ibatis.domain.blog.mappers.BlogMapper.lateNestedDiscriminatorPost").hasNestedResultMaps());
@@ -210,6 +265,9 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldSelectOneAuthor() throws Exception {
     SqlSession session = sqlMapper.openSession();
     try {
+      /**
+       * 此处测试<ResultMap></ResultMap>映射的Author对象
+       */
       Author author = session.selectOne(
           "org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAuthor", new Author(101));
       assertEquals(101, author.getId());
@@ -223,6 +281,10 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldSelectOneAuthorAsList() throws Exception {
     SqlSession session = sqlMapper.openSession();
     try {
+
+      /**
+       * 虽然sql是查出一个对象，因为selectOne内部其实是调用selectList()方法查询的，所以直接调用selectList()也是可以的
+       */
       List<Author> authors = session.selectList(
           "org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAuthor", new Author(101));
       assertEquals(101, authors.get(0).getId());
@@ -236,6 +298,11 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldSelectOneImmutableAuthor() throws Exception {
     SqlSession session = sqlMapper.openSession();
     try {
+      /**
+       * 测试<constructor></constructor>
+       * 会在DefaultResultSerHandler#createResultObject()方法中初始化对象
+       */
+
       ImmutableAuthor author = session.selectOne(
           "org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectImmutableAuthor", new Author(101));
       assertEquals(101, author.getId());
@@ -250,6 +317,13 @@ public class SqlSessionTest extends BaseDataTest {
     SqlSession session = sqlMapper.openSession();
     try {
       /**
+       * 测试可以通过内部的参数作为查询条件
+       *
+       * mybatis是怎么解析传参对象的值对应sql的占位符呢？
+       * 会在SimpleExecutor$prepareStatement方法中，进行sql预处理。
+       * 如果传入的参数是对象，会通过反射并将数据存储在MetaObject对象中
+       *
+       *
        * todo 区别？使用场景？
        * DefaultSqlSession
        * SqlSessionManager
@@ -266,6 +340,12 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldInsertAuthor() throws Exception {
     SqlSession session = sqlMapper.openSession();
     try {
+      /**
+       * 此处测试的是插入语句的执行顺序
+       * 跟select相似
+       * 更新/插入都是调用同一个方法，
+       * 更新/插入都会刷新二级缓存和一级缓存
+       */
       Author expected = new Author(500, "cbegin", "******", "cbegin@somewhere.com", "Something...", null);
       int updates = session.insert("org.apache.ibatis.domain.blog.mappers.AuthorMapper.insertAuthor", expected);
       assertEquals(1, updates);
@@ -283,6 +363,15 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldUpdateAuthorImplicitRollback() throws Exception {
+
+    /**
+     * 测试当AutoCommit设置成false的时候并且dirty为true。SqlSession$close会进行回滚
+     * 回滚流程如下
+     * 1. CachingExecutor$close方法
+     * 2. BaseExecutor$close方法 会清除本地缓存
+     * 3. 调用事务的回滚例如JdbcTransaction$rollback
+     * 4. 调用DefaultSqlSession$closeCursors
+     */
     SqlSession session = sqlMapper.openSession();
     Author original;
     Author updated;
@@ -307,6 +396,16 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldUpdateAuthorCommit() throws Exception {
+
+    /**
+     * 测试主动提交后，不会进行数据回滚
+     * 提交流程：
+     * 1. 清除本地缓存
+     * 2. 调用事务的提交
+     *
+     * 在SqlSession有个dirty参数，记录是否是脏数据，如果主动调用commit方法，提交完成后会将其dirty设置成false
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     Author original;
     Author updated;
@@ -317,6 +416,7 @@ public class SqlSessionTest extends BaseDataTest {
       assertEquals(1, updates);
       updated = session.selectOne("org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAuthor", 101);
       assertEquals(original.getEmail(), updated.getEmail());
+      //自动提交
       session.commit();
     } finally {
       session.close();
@@ -332,6 +432,13 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldUpdateAuthorIfNecessary() throws Exception {
+    /**
+     * 此处是测试 为null的列不会更新
+     *
+     * 在insert/update 流程中，在创建BaseStatementHandler对象是，会从Configuration对象中获取MappedStatement对象
+     * MappedStatement$getBoundSql方法处理sql，内部会通过DynamicSqlSource 会调用 SqlNode处理不同的标签,例如<if></if>
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     Author original;
     Author updated;

@@ -42,8 +42,11 @@ public class SimpleStatementHandler extends BaseStatementHandler {
 
   @Override
   public int update(Statement statement) throws SQLException {
+    //获取到sql
     String sql = boundSql.getSql();
     Object parameterObject = boundSql.getParameterObject();
+
+    //todo 需要了解KeyGenerator
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     int rows;
     if (keyGenerator instanceof Jdbc3KeyGenerator) {

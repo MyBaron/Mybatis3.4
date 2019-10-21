@@ -61,11 +61,15 @@ public class SimpleExecutor extends BaseExecutor {
       /**
        * todo 创建 StatementHandler   StatementHandler是什么？有什么作用
        * 下面3个实现类有什么区别
+       * RoutingStatementHandler 创建具有路由功能的 StatementHandler
        * SimpleStatementHandler
        * PreparedStatementHandler
        * CallableStatementHandler
        */
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+      /**
+       * 此处进行拼接参数，此处也是进行预处理
+       */
       stmt = prepareStatement(handler, ms.getStatementLog());
       return handler.<E>query(stmt, resultHandler);
     } finally {
@@ -88,8 +92,10 @@ public class SimpleExecutor extends BaseExecutor {
 
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
+    //获取连接
     Connection connection = getConnection(statementLog);
     stmt = handler.prepare(connection, transaction.getTimeout());
+    //进行预处理
     handler.parameterize(stmt);
     return stmt;
   }

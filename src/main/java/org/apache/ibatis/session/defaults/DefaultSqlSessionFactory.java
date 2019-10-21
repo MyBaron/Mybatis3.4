@@ -90,6 +90,11 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
     Transaction tx = null;
     try {
+      /**
+       * 根据Environment获取事务对象
+       * JdbcTransactionFactory 使用JDK提供的JDBC来管理事务的各个环节：提交、回滚、关闭等操作
+       * ManagedTransactionFactory 什么都不做，MANAGED类型的事务模型其实是一个托管模型，也就是说它自身并不实现任何事务功能，而是托管出去由其他框架来实现，例如有Spring事务实现
+       */
       final Environment environment = configuration.getEnvironment();
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
       tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);

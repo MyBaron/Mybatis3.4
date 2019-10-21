@@ -52,7 +52,17 @@ public class DefaultSqlSession implements SqlSession {
   private final Executor executor;
 
   private final boolean autoCommit;
+  /**
+   *  todo  这个参与用途是什么
+   *  貌似当主动commit的时候，会改成false
+   *  当有进行新增/更新操作的时候，会将dirty改成true
+   *
+   *  猜测：这个是脏数据的标记，如果是true，代表有脏数据，当关闭会话的时候，如果还有脏数据，就需要回滚数据
+   */
   private boolean dirty;
+  /**
+   *  todo 这个又是什么？
+   */
   private List<Cursor<?>> cursorList;
 
   public DefaultSqlSession(Configuration configuration, Executor executor, boolean autoCommit) {
@@ -157,10 +167,18 @@ public class DefaultSqlSession implements SqlSession {
        * todo  区别？使用场景？ 初始化在哪个阶段
        * BaseExecutor
        * BatchExecutor
-       * CachingExecutor
+       * SimpleExecutor
+       * CachingExecutor 内部有参数Executor，真正的Executor实现类，CachingExecutor是当开启缓存的时候，会创建一个CachingExecutor对象封装原有的Executor对象
        * ClosedExecutor
        * ReuseExecutor
-       * SimpleExecutor
+       */
+
+      /**
+       * ResultHandler 设置会null
+       * RowBounds是什么？据 RowBounds 定位到指定行记录，实现分页
+       *
+       * 注意wrapCollection()方法
+       * 该方法
        */
       return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
     } catch (Exception e) {

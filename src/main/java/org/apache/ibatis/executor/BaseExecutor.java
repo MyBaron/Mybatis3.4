@@ -268,6 +268,7 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public void clearLocalCache() {
+    //todo 本地缓存时全部刷新的？
     if (!closed) {
       localCache.clear();
       localOutputParameterCache.clear();
@@ -327,6 +328,7 @@ public abstract class BaseExecutor implements Executor {
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
     // 向缓存中存储一个占位符
+    // PerpetualCache对象
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);

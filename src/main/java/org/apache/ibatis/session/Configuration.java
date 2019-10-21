@@ -573,6 +573,14 @@ public class Configuration {
     executorType = executorType == null ? defaultExecutorType : executorType;
     executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
     Executor executor;
+    /**
+     * 根据不同的类型创建不同的Executor实现类
+     * 基础实现类有
+     * BatchExecutor
+     * ReuseExecutor
+     * SimpleExecutor 继承于BaseExecutor
+     * 如果开启了缓存那么会用CachingExecutor类封装以上3种其中一种
+     */
     if (ExecutorType.BATCH == executorType) {
       executor = new BatchExecutor(this, transaction);
     } else if (ExecutorType.REUSE == executorType) {
@@ -583,6 +591,8 @@ public class Configuration {
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }
+
+    //此处调用插件
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }

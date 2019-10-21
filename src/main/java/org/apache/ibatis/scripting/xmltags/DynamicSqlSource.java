@@ -59,7 +59,7 @@ public class DynamicSqlSource implements SqlSource {
      *
      *  ParameterMapping是什么？
      *  每个 #{xxx} 占位符都会被解析成相应的 ParameterMapping 对象
-     */
+            */
     SqlSource sqlSource = sqlSourceParser.parse(context.getSql(), parameterType, context.getBindings());
     // 将 DynamicContext 的 ContextMap 中的内容拷贝到 BoundSql 中
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);

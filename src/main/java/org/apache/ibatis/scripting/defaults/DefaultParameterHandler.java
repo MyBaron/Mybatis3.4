@@ -65,11 +65,16 @@ public class DefaultParameterHandler implements ParameterHandler {
      * 与原始 SQL 中的 #{xxx} 占位符一一对应
      */
     ErrorContext.instance().activity("setting parameters").object(mappedStatement.getParameterMap().getId());
+    //获取BoundSql存储的SQL参数
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings != null) {
       for (int i = 0; i < parameterMappings.size(); i++) {
         ParameterMapping parameterMapping = parameterMappings.get(i);
-        // todo 什么是Out类型   检测参数类型，排除掉 mode 为 OUT 类型的 parameterMapping
+        /**
+         * 什么是Out类型   检测参数类型，排除掉 mode 为 OUT 类型的 parameterMapping
+         *
+         * 存储过程IN,OUT,IN OUT
+         */
         if (parameterMapping.getMode() != ParameterMode.OUT) {
           Object value;
           // 获取属性名
@@ -92,6 +97,7 @@ public class DefaultParameterHandler implements ParameterHandler {
             value = parameterObject;
           } else {
             // 为用户传入的参数 parameterObject 创建元信息对象
+            //如果参数是一个对象，会通过反射获取到这个对象的方法和参数，并且用MetaObject对象封装
             MetaObject metaObject = configuration.newMetaObject(parameterObject);
             // 从用户传入的参数中获取 propertyName 对应的值
             value = metaObject.getValue(propertyName);
