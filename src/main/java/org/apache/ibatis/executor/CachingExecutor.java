@@ -99,13 +99,19 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
-    //如果开启1级缓存才有缓存对象
+    /**
+     * 二级缓存
+     * 如果开启了二级缓存，Cache对象不会为null
+     */
     Cache cache = ms.getCache();
     if (cache != null) {
       flushCacheIfRequired(ms);
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
         @SuppressWarnings("unchecked")
+        /**
+         * todo 为什么缓存是TransactionalCache
+          */
         List<E> list = (List<E>) tcm.getObject(cache, key);
         if (list == null) {
           list = delegate.<E> query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);

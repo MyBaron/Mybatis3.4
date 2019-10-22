@@ -51,6 +51,9 @@ public class ParamNameResolver {
   private boolean hasParamAnnotation;
 
   public ParamNameResolver(Configuration config, Method method) {
+    /**
+     * 处理参数@Param注解
+     */
     final Class<?>[] paramTypes = method.getParameterTypes();
     final Annotation[][] paramAnnotations = method.getParameterAnnotations();
     final SortedMap<Integer, String> map = new TreeMap<Integer, String>();
@@ -115,12 +118,18 @@ public class ParamNameResolver {
     final int paramCount = names.size();
     if (args == null || paramCount == 0) {
       return null;
+
+      //没有使用@Param注解 并且个数为1
     } else if (!hasParamAnnotation && paramCount == 1) {
       return args[names.firstKey()];
     } else {
       final Map<String, Object> param = new ParamMap<Object>();
       int i = 0;
       for (Map.Entry<Integer, String> entry : names.entrySet()) {
+        /**
+         * 此处是没有使用@Param注解
+         * args命名都以param1,param2
+         */
         param.put(entry.getValue(), args[entry.getKey()]);
         // add generic param names (param1, param2, ...)
         final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);

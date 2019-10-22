@@ -147,14 +147,24 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
             }
           } else {
             if (lazyLoader.size() > 0 && !FINALIZE_METHOD.equals(methodName)) {
+              /*
+               * 如果 aggressive 为 true，或触发方法（比如 equals，hashCode 等）被调用，
+               * 则加载所有的所有延迟加载的数据
+               */
               if (aggressive || lazyLoadTriggerMethods.contains(methodName)) {
                 lazyLoader.loadAll();
               } else if (PropertyNamer.isSetter(methodName)) {
                 final String property = PropertyNamer.methodToProperty(methodName);
+                // 如果使用者显示调用了 setter 方法，则将相应的延迟加载类从 loaderMap 中移除
                 lazyLoader.remove(property);
+
+                // 检测使用者是否调用 getter 方法
               } else if (PropertyNamer.isGetter(methodName)) {
                 final String property = PropertyNamer.methodToProperty(methodName);
+
+                // 检测该属性是否有相应的 LoadPair 对象
                 if (lazyLoader.hasLoader(property)) {
+                  // 执行延迟加载逻辑
                   lazyLoader.load(property);
                 }
               }

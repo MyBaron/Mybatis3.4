@@ -78,6 +78,7 @@ public class ResultLoaderMap {
   public boolean load(String property) throws SQLException {
     LoadPair pair = loaderMap.remove(property.toUpperCase(Locale.ENGLISH));
     if (pair != null) {
+      System.out.println("加载了"+property);
       pair.load();
       return true;
     }

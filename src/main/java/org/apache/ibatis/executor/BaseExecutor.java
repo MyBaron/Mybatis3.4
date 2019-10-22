@@ -55,6 +55,9 @@ public abstract class BaseExecutor implements Executor {
   protected Executor wrapper;
 
   protected ConcurrentLinkedQueue<DeferredLoad> deferredLoads;
+  /**
+   * 一级缓存 生命周期跟Session会话一致
+   */
   protected PerpetualCache localCache;
   protected PerpetualCache localOutputParameterCache;
   protected Configuration configuration;
@@ -154,7 +157,12 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     try {
       queryStack++;
-      //todo PerpetualCache 是什么 貌似跟缓存有关系
+      /**
+       * 一级缓存
+       * PerpetualCache 是什么？
+       * PerpetualCache 生命周期跟Session会话一致
+       *
+       */
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);

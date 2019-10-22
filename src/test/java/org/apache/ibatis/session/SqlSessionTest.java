@@ -433,7 +433,7 @@ public class SqlSessionTest extends BaseDataTest {
   @Test
   public void shouldUpdateAuthorIfNecessary() throws Exception {
     /**
-     * 此处是测试 为null的列不会更新
+     * 测试 为null的列不会更新
      *
      * 在insert/update 流程中，在创建BaseStatementHandler对象是，会从Configuration对象中获取MappedStatement对象
      * MappedStatement$getBoundSql方法处理sql，内部会通过DynamicSqlSource 会调用 SqlNode处理不同的标签,例如<if></if>
@@ -465,6 +465,11 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldDeleteAuthor() throws Exception {
+
+    /**
+     * 测试delete语句的sql
+     * 内部也是调用update方法，所有实现逻辑都跟update一样
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       final int id = 102;
@@ -489,6 +494,22 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldSelectBlogWithPostsAndAuthorUsingSubSelects() throws Exception {
+    /**
+     * 此处测试resultMap
+     * 有<association></association> 和<collection></collection> 标签
+     *
+     * <association></association> 构建Author对象
+     *
+     * <collection></collection> 构建Post集合对象
+     *
+     * 这次查询其次有3次访问数据源
+     *
+     * 在第一次访问数据源，处理数据时，
+     * 主要逻辑在DefaultResultSetHandler类中
+     * 剩下两次访问数据源是因为ResultMapping中有关联的子查询
+     *
+     */
+
     SqlSession session = sqlMapper.openSession();
     try {
       Blog blog = session.selectOne("org.apache.ibatis.domain.blog.mappers.BlogMapper.selectBlogWithPostsUsingSubSelect", 1);
@@ -504,9 +525,18 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldSelectBlogWithPostsAndAuthorUsingSubSelectsLazily() throws Exception {
+    /**
+     * 测试懒加载
+     *
+     * 只要ResultMapping中有一项property是懒加载，那么这个ResultMapping对象就会用代理类管理
+     * 利用javassist生成代理类
+     *
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       Blog blog = session.selectOne("org.apache.ibatis.domain.blog.mappers.BlogMapper.selectBlogWithPostsUsingSubSelectLazily", 1);
+      System.out.println("获取到代理对象");
       Assert.assertTrue(blog instanceof Proxy);
       assertEquals("Jim Business", blog.getTitle());
       assertEquals(2, blog.getPosts().size());
@@ -520,6 +550,12 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldSelectBlogWithPostsAndAuthorUsingJoin() throws Exception {
+
+    /**
+     * 此处测试多结果集
+     * 有<association></association> 和<collection></collection> 标签并且此标签都是有<resultMap></resultMap>
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       Blog blog = session.selectOne("org.apache.ibatis.domain.blog.mappers.BlogMapper.selectBlogJoinedWithPostsAndAuthor", 1);
@@ -555,6 +591,13 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldSelectNestedBlogWithPostsAndAuthorUsingJoin() throws Exception {
+
+    /**
+     * 此处测试多结果集
+     * 在<association></association> 和<collection></collection> 标签中，虽然没有<resultMap></resultMap>
+     * 但是<association></association> 和<collection></collection> 的值也是分别放在各自resultMap对象中
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       Blog blog = session.selectOne("org.apache.ibatis.domain.blog.mappers.NestedBlogMapper.selectBlogJoinedWithPostsAndAuthor", 1);
@@ -614,6 +657,11 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldCacheAllAuthors() throws Exception {
+    /**
+     * 测试二级缓存
+     * 如果xml开启了二级缓存
+     * MappedStatement的Cache参数会有初始化对象
+     */
     int first = -1;
     int second = -1;
     SqlSession session = sqlMapper.openSession();
@@ -636,6 +684,10 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldNotCacheAllAuthors() throws Exception {
+
+    /**
+     * 测试不开启二级缓存的效果
+     */
     int first = -1;
     int second = -1;
     SqlSession session = sqlMapper.openSession();
@@ -657,6 +709,12 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldSelectAuthorsUsingMapperClass() {
+    /**
+     * 测试 通过调用生成的代理类实现查询
+     *
+     * 通过MapperProxyFactory 生成代理类
+     * 代理类是MapperProxy
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
@@ -669,6 +727,14 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldExecuteSelectOneAuthorUsingMapperClass() {
+
+    /**
+     *
+     * 在调用代理对象方法进行查询的时候，会先创建一个MapperMethod对象，创建是会初始化MapperMethod内部类MethodSignature
+     * 初始化MethodSignature对象时，会处理调用方法的返回类型，参数名称和类型，rowBound和resultHandler
+     *
+     * 其中ParamNameResolver对象是处理@Param参数注解
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);

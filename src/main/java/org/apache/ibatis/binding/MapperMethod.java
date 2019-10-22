@@ -51,6 +51,9 @@ public class MapperMethod {
   }
 
   public Object execute(SqlSession sqlSession, Object[] args) {
+    /**
+     * rowCountResult 是根据被代理对象调用方法的返回类型来将结果转成返回类型
+     */
     Object result;
     switch (command.getType()) {
       case INSERT: {
@@ -69,6 +72,7 @@ public class MapperMethod {
         break;
       }
       case SELECT:
+        //是否返回void 并且使用resultHandler获取处理结果
         if (method.returnsVoid() && method.hasResultHandler()) {
           executeWithResultHandler(sqlSession, args);
           result = null;
@@ -126,6 +130,7 @@ public class MapperMethod {
           + " needs either a @ResultMap annotation, a @ResultType annotation,"
           + " or a resultType attribute in XML so a ResultHandler can be used as a parameter.");
     }
+    //此处只是处理没有使用@Params的情况
     Object param = method.convertArgsToSqlCommandParam(args);
     if (method.hasRowBounds()) {
       RowBounds rowBounds = method.extractRowBounds(args);
@@ -292,6 +297,7 @@ public class MapperMethod {
         this.returnType = method.getReturnType();
       }
       this.returnsVoid = void.class.equals(this.returnType);
+      //是否返回一个集合
       this.returnsMany = configuration.getObjectFactory().isCollection(this.returnType) || this.returnType.isArray();
       this.returnsCursor = Cursor.class.equals(this.returnType);
       this.mapKey = getMapKey(method);

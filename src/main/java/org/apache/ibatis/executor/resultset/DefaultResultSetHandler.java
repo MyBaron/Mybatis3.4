@@ -323,7 +323,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private void handleResultSet(ResultSetWrapper rsw, ResultMap resultMap, List<Object> multipleResults, ResultMapping parentMapping) throws SQLException {
     try {
       if (parentMapping != null) {
-        // 多结果集相关逻辑，不分析了
+        // 多结果集相关逻辑
         handleRowValues(rsw, resultMap, null, RowBounds.DEFAULT, parentMapping);
       } else {
         /*
@@ -545,7 +545,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private Object getPropertyMappingValue(ResultSet rs, MetaObject metaResultObject, ResultMapping propertyMapping, ResultLoaderMap lazyLoader, String columnPrefix)
       throws SQLException {
     if (propertyMapping.getNestedQueryId() != null) {
-      // 获取关联查询结果 <association >
+      // 获取关联查询结果 <association ></association> 或者<collection></collection>
       return getNestedQueryMappingValue(rs, metaResultObject, propertyMapping, lazyLoader, columnPrefix);
     } else if (propertyMapping.getResultSet() != null) {
       addPendingChildRelation(rs, metaResultObject, propertyMapping);   // TODO is that OK?
@@ -906,7 +906,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     final String property = propertyMapping.getProperty();
     // 根据 nestedQueryId 获取 MappedStatement
     final MappedStatement nestedQuery = configuration.getMappedStatement(nestedQueryId);
-    final Class<?> nestedQueryParameterType = nestedQuery.getParameterMap().getType();
+    final Class<?> nestedQueryParameterType = nestedQuery.getParameterMap().getType();// 此处是获取子查询的参数
     final Object nestedQueryParameterObject = prepareParameterForNestedQuery(rs, propertyMapping, nestedQueryParameterType, columnPrefix);
     Object value = null;
 
