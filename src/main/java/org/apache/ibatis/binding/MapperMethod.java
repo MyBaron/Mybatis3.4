@@ -53,10 +53,17 @@ public class MapperMethod {
   public Object execute(SqlSession sqlSession, Object[] args) {
     /**
      * rowCountResult 是根据被代理对象调用方法的返回类型来将结果转成返回类型
+     *
+     *
+     * 为什么需要处理参数，在初始化MethodSignature对象时已经处理参数了？
+     *
+     * MethodSignature初始化时处理参数仅仅是处理带有@Param注解时的处理，构建参数的index以及@Param的value的映射
+     * 在MethodSignature$convertArgsToSqlCommandParam的
      */
     Object result;
     switch (command.getType()) {
       case INSERT: {
+
       Object param = method.convertArgsToSqlCommandParam(args);
         result = rowCountResult(sqlSession.insert(command.getName(), param));
         break;
@@ -355,6 +362,9 @@ public class MapperMethod {
       Integer index = null;
       final Class<?>[] argTypes = method.getParameterTypes();
       for (int i = 0; i < argTypes.length; i++) {
+        /**
+         * class1.isAssignableFrom(class2) 判定此 Class 对象所表示的类或接口与指定的 Class 参数所表示的类或接口是否相同，或是否是其超类或超接口
+         */
         if (paramType.isAssignableFrom(argTypes[i])) {
           if (index == null) {
             index = i;

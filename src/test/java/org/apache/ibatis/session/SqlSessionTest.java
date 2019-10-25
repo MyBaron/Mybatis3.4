@@ -729,8 +729,8 @@ public class SqlSessionTest extends BaseDataTest {
   public void shouldExecuteSelectOneAuthorUsingMapperClass() {
 
     /**
-     *
-     * 在调用代理对象方法进行查询的时候，会先创建一个MapperMethod对象，创建是会初始化MapperMethod内部类MethodSignature
+     * SqlSession$getMapper方法
+     * 在调用代理对象方法进行查询的时候，会先创建一个MapperMethod对象，创建时会初始化MapperMethod内部类MethodSignature
      * 初始化MethodSignature对象时，会处理调用方法的返回类型，参数名称和类型，rowBound和resultHandler
      *
      * 其中ParamNameResolver对象是处理@Param参数注解
@@ -748,7 +748,28 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldExecuteSelectOneAuthorUsingMapperClassThatReturnsALinedHashMap() {
-    SqlSession session = sqlMapper.openSession();
+
+      /**
+       * 测试 通过调用接口类的方法返回LinkedHashMap类型
+       *
+       * 有两个地方会处理返回结果转成想要的数据类型
+       * 一个是MapperMethod 开始调用查询方法
+       *
+       * 一个是DefaultResultSetHandler$getRowValue 处理行结果
+       *
+       * 这两个有什么区别呢？
+       * 1. MapperMethod并没有和DefaultResultSetHandler$getRowValue冲突，相反后者是前端的互补，
+       * MapperMethod中，提供了对于ResultHandler或者是使用了@MapKey注解的方法Map,Collection,Cusror类型的转换方法。 主要是判断调用的抽象方法的返回类型是否是其中一个类型，
+       * 如果是，那么会进入到封装方法中，将返回的结果处理成该类型。
+       *
+       * 2. 对于DefaultResultSetHandler$getRowValue，其逻辑是真正地将ResultSet中的数据转成resultType或者resultMap的类型
+       *
+       * 3. 在这次测试中，返回类型是LinkedHashMap，LinkedHashMap不是MapperMethod中的需要封装的类型，所以数据转换成LinkedHashMap其实是DefaultResultSetHandler$getRowValue去完成的
+       *
+       * 4. @MapKey 注解的作用，例如@MapKey("id")，那么返回的Map值就是 Map<ID,对象>
+       *
+       */
+      SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
       LinkedHashMap<String, Object> author = mapper.selectAuthorLinkedHashMap(101);
@@ -760,6 +781,12 @@ public class SqlSessionTest extends BaseDataTest {
   
   @Test
   public void shouldExecuteSelectAllAuthorsUsingMapperClassThatReturnsSet() {
+    /**
+     * 测试 返回Set集合类型
+     *
+     * 内部调用是SqlSession.selectList方法，但是此处返回的是Collection对象，所以转换类型逻辑是在MapperMethod$executeForMany中进行
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
@@ -772,6 +799,12 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldExecuteSelectAllAuthorsUsingMapperClassThatReturnsVector() {
+    /**
+     * 测试 返回Vector集合类型
+     *
+     * 内部调用是SqlSession.selectList方法，但是此处返回的是Collection对象，所以转换类型逻辑是在MapperMethod$executeForMany中进行
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
@@ -784,6 +817,12 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldExecuteSelectAllAuthorsUsingMapperClassThatReturnsLinkedList() {
+    /**
+     * 测试 返回LinkedList集合类型
+     *
+     * 内部调用是SqlSession.selectList方法，但是此处返回的是Collection对象，所以转换类型逻辑是在MapperMethod$executeForMany中进行
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
@@ -796,6 +835,12 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldExecuteSelectAllAuthorsUsingMapperClassThatReturnsAnArray() {
+    /**
+     * 测试 返回数组类型
+     *
+     * 内部调用是SqlSession.selectList方法，但是此处返回的是Collection对象，所以转换类型逻辑是在MapperMethod$executeForMany中进行
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
@@ -808,6 +853,9 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldExecuteSelectOneAuthorUsingMapperClassWithResultHandler() {
+    /**
+     * 测试 通过ResultHandler获取结果集
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       DefaultResultHandler handler = new DefaultResultHandler();
@@ -822,6 +870,10 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test(expected=BindingException.class)
   public void shouldFailExecutingAnAnnotatedMapperClassWithResultHandler() {
+    /**
+     * 测试 用ResultHandler获取结果
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       DefaultResultHandler handler = new DefaultResultHandler();
@@ -836,6 +888,9 @@ public class SqlSessionTest extends BaseDataTest {
   
   @Test
   public void shouldSelectAuthorsUsingMapperClassWithResultHandler() {
+    /**
+     * 测试 用ResultHandler获取多个结果
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       DefaultResultHandler handler = new DefaultResultHandler();
@@ -849,6 +904,11 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test(expected = BindingException.class)
   public void shouldFailSelectOneAuthorUsingMapperClassWithTwoResultHandlers() {
+    /**
+     * 测试 传入大于一个ResultHandler会抛出异常
+     *
+     * 在SqlSession$getMapper过程中，初始化MapperMethod时会校验该方法的参数，利用getUniqueParamIndex方法判断只允许参数中只有一个是该父类的实现类
+     */
     Configuration configuration = new Configuration(sqlMapper.getConfiguration().getEnvironment());
     configuration.addMapper(AuthorMapperWithMultipleHandlers.class);
     SqlSessionFactory sqlMapperWithMultipleHandlers = new DefaultSqlSessionFactory(configuration);
@@ -865,6 +925,14 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test(expected = BindingException.class)
   public void shouldFailSelectOneAuthorUsingMapperClassWithTwoRowBounds() {
+    /**
+     * 测试 传入大于一个RowBounds会抛出异常
+     *
+     * 在SqlSession$getMapper过程中，初始化MapperMethod时会校验该方法的参数，利用getUniqueParamIndex方法判断只允许参数中只有一个是该父类的实现类
+     *
+     * RowBounds 是逻辑分页
+     */
+
     Configuration configuration = new Configuration(sqlMapper.getConfiguration().getEnvironment());
     configuration.addMapper(AuthorMapperWithRowBounds.class);
     SqlSessionFactory sqlMapperWithMultipleHandlers = new DefaultSqlSessionFactory(configuration);
@@ -881,6 +949,13 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldInsertAuthorUsingMapperClass() throws Exception {
+    /**
+     * 测试 插入数据
+     *
+     * 内部调用SqlSession$update方法
+     *
+     */
+
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
@@ -900,6 +975,13 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldDeleteAuthorUsingMapperClass() throws Exception {
+    /**
+     * 测试 删除数据
+     *
+     * 内部调用SqlSession$update方法
+     *
+     */
+
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
@@ -913,6 +995,9 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldUpdateAuthorUsingMapperClass() throws Exception {
+    /**
+     * 测试 更新
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       AuthorMapper mapper = session.getMapper(AuthorMapper.class);
@@ -929,6 +1014,11 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldSelectAllPostsUsingMapperClass() throws Exception {
+    /**
+     * 测试 查询结果存储到Map中
+     *
+     * todo 列名是怎么转成驼峰的 需要看reflector模块
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       BlogMapper mapper = session.getMapper(BlogMapper.class);
@@ -941,6 +1031,13 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldLimitResultsUsingMapperClass() throws Exception {
+
+    /**
+     * 测试使用 RowBounds 返回范围内的数据
+     *
+     * 在DefaultResultSetHandler$skipRows 方法中实现逻辑分页
+     */
+
     SqlSession session = sqlMapper.openSession();
     try {
       BlogMapper mapper = session.getMapper(BlogMapper.class);
@@ -957,14 +1054,17 @@ public class SqlSessionTest extends BaseDataTest {
     int count = 0;
     @Override
     public void handleResult(ResultContext context) {
+      System.out.println(context);
       count++;
     }
   }
 
   @Test
   public void shouldHandleZeroParameters() throws Exception {
+    /**
+     * 测试 自定义实现ResultHandler
+      */
     SqlSession session = sqlMapper.openSession();
-
     try {
       final TestResultHandler resultHandler = new TestResultHandler();
       session.select("org.apache.ibatis.domain.blog.mappers.BlogMapper.selectAllPosts", resultHandler);
@@ -985,8 +1085,13 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldStopResultHandler() throws Exception {
+    /**
+     * 测试 DefaultResultContext的stopped 参数
+     *
+     * DefaultResultContext.stopped 参数如果为true，就不会再处理下一行数据
+     *
+     */
     SqlSession session = sqlMapper.openSession();
-
     try {
       final TestResultStopHandler resultHandler = new TestResultStopHandler();
       session.select("org.apache.ibatis.domain.blog.mappers.BlogMapper.selectAllPosts", null, resultHandler);
@@ -998,6 +1103,12 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldOffsetAndLimitResultsUsingMapperClass() throws Exception {
+
+    /**
+     * 测试 RowBounds逻辑分页
+     *
+     */
+
     SqlSession session = sqlMapper.openSession();
     try {
       BlogMapper mapper = session.getMapper(BlogMapper.class);
@@ -1013,6 +1124,33 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldFindPostsAllPostsWithDynamicSql() throws Exception {
+    /**
+     * 测试 DynamicSql对象 以及处理动态SQL
+     *
+     *
+     * 可以将其看做 结果容器，每个阶段的处理结果都会存储在DynamicContext
+     * 存储SQL以及参数
+     * 每个 SQL 片段解析完成后，都会将解析结果存入 DynamicContext 中
+     *
+     *  <where>
+     *       <choose>
+     *         <when test="id != null">id = #{id}</when>
+     *         <when test="author_id != null">AND author_id = #{author_id}</when>
+     *         <otherwise>
+     *           <if test="ids != null">
+     *             AND id IN
+     *             <foreach item="item_id" index="index" open="(" close=")" separator="," collection="ids">#{ids[${index}]}
+     *             </foreach>
+     *           </if>
+     *           <trim prefix="AND">
+     *             <include refid="byBlogId">
+     *                 <property name="prefix" value="blog"/>
+     *             </include>
+     *           </trim>
+     *         </otherwise>
+     *       </choose>
+     *     </where>
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.findPost");
@@ -1024,9 +1162,15 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldFindPostByIDWithDynamicSql() throws Exception {
+    /**
+     * 测试 在动态sql下 如果处理参数
+     *
+     * 在DynamicContext中，会先将参数处理成MetaObject，便于在下文处理动态sql的时候使用
+     *
+     * 那么在
+     */
     SqlSession session = sqlMapper.openSession();
-    try {
-      List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.findPost",
+    try { List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.findPost",
           new HashMap<String, Integer>() {{
             put("id", 1);
           }});
@@ -1038,6 +1182,11 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldFindPostsInSetOfIDsWithDynamicSql() throws Exception {
+
+    /**
+     * 测试 <foreach></foreach>标签
+     */
+
     SqlSession session = sqlMapper.openSession();
     try {
       List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.findPost",
@@ -1056,6 +1205,10 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldFindPostsWithBlogIdUsingDynamicSql() throws Exception {
+
+    /**
+     * 测试 <include></include> 标签
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.findPost",
@@ -1070,6 +1223,11 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldFindPostsWithAuthorIdUsingDynamicSql() throws Exception {
+
+    /**
+     * 测试 <when></when> 标签
+     */
+
     SqlSession session = sqlMapper.openSession();
     try {
       List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.findPost",
@@ -1084,6 +1242,10 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldFindPostsWithAuthorAndBlogIdUsingDynamicSql() throws Exception {
+    /**
+     *  测试 <foreach></foreach> 集合参数的处理
+     */
+
     SqlSession session = sqlMapper.openSession();
     try {
       List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.findPost",
@@ -1103,6 +1265,16 @@ public class SqlSessionTest extends BaseDataTest {
 
   @Test
   public void shouldFindPostsInList() throws Exception {
+    /**
+     *
+     * 在DefaultSqlSession中wrapCollection方法会将参数是集合类型或者数组类型进行转型
+     * 集合类型会存储在StrictMap里面，key名称是list
+     * 数组类型存储在StrictMap里面，key名称是array
+     *
+     * 此处用途是什么？
+     * 处理动态sql的时候，对于<foreach></foreach>标签遍历的名称，可以用list或者array
+     *
+     */
     SqlSession session = sqlMapper.openSession();
     try {
       List<Post> posts = session.selectList("org.apache.ibatis.domain.blog.mappers.PostMapper.selectPostIn",

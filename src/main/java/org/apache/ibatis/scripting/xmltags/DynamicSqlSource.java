@@ -42,6 +42,8 @@ public class DynamicSqlSource implements SqlSource {
      * 可以将其看做 结果容器，每个阶段的处理结果都会存储在DynamicContext
      * 存储SQL以及参数
      * 每个 SQL 片段解析完成后，都会将解析结果存入 DynamicContext 中
+     *
+     * 初始化DynamicContext对象时，会将参数封装到MetaObject对象中，以便下文处理动态sql使用
      */
     DynamicContext context = new DynamicContext(configuration, parameterObject);
     /**

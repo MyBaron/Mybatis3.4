@@ -74,6 +74,9 @@ public class ParamNameResolver {
       }
       if (name == null) {
         // @Param was not specified.
+        /***
+         * 是否使用参数的真实名称
+         */
         if (config.isUseActualParamName()) {
           name = getActualParamName(method, paramIndex);
         }
@@ -127,14 +130,17 @@ public class ParamNameResolver {
       int i = 0;
       for (Map.Entry<Integer, String> entry : names.entrySet()) {
         /**
-         * 此处是没有使用@Param注解
          * args命名都以param1,param2
+         * param key=参数名称 value=参数的值
          */
         param.put(entry.getValue(), args[entry.getKey()]);
         // add generic param names (param1, param2, ...)
         final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
         // ensure not to overwrite parameter named with @Param
         if (!names.containsValue(genericParamName)) {
+          /**
+           * 此处也会对所以参数存储一份别名，以param+序号存储
+           */
           param.put(genericParamName, args[entry.getKey()]);
         }
         i++;
