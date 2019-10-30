@@ -34,6 +34,9 @@ public class PluginTest {
 
   @Test
   public void shouldNotInterceptToString() {
+    /**
+     * 测试 没有触发代理方法
+     */
     Map map = new HashMap();
     map = (Map) new AlwaysMapPlugin().plugin(map);
     assertFalse("Always".equals(map.toString()));
@@ -49,6 +52,7 @@ public class PluginTest {
 
     @Override
     public Object plugin(Object target) {
+      //构建代理类
       return Plugin.wrap(target, this);
     }
 

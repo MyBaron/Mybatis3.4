@@ -33,7 +33,10 @@ import java.util.Date;
 public class CacheKeyTest {
 
   @Test
-  public void shouldTestCacheKeysEqual() {
+  public void shouldTestCacheKeysEqual() throws InterruptedException {
+    /**
+     * 此处会认为同一个CacheKey，是因为Date对象的equals方法是比较time的
+     */
     Date date = new Date();
     CacheKey key1 = new CacheKey(new Object[] { 1, "hello", null, new Date(date.getTime()) });
     CacheKey key2 = new CacheKey(new Object[] { 1, "hello", null, new Date(date.getTime()) });
@@ -45,6 +48,9 @@ public class CacheKeyTest {
 
   @Test
   public void shouldTestCacheKeysNotEqualDueToDateDifference() throws Exception {
+    /**
+     * 测试 因为Date的时间不一样，相当于有一个参数不一样，所以两个CacheKey不一样
+     */
     CacheKey key1 = new CacheKey(new Object[] { 1, "hello", null, new Date() });
     Thread.sleep(1000);
     CacheKey key2 = new CacheKey(new Object[] { 1, "hello", null, new Date() });
@@ -56,6 +62,9 @@ public class CacheKeyTest {
 
   @Test
   public void shouldTestCacheKeysNotEqualDueToOrder() throws Exception {
+    /**
+     * 测试 因为参数顺序不一样，导致两个CacheKey不一样
+     */
     CacheKey key1 = new CacheKey(new Object[] { 1, "hello", null });
     Thread.sleep(1000);
     CacheKey key2 = new CacheKey(new Object[] { 1, null, "hello" });
@@ -67,6 +76,9 @@ public class CacheKeyTest {
 
   @Test
   public void shouldDemonstrateEmptyAndNullKeysAreEqual() {
+    /**
+     * 测试传入空对象，CacheKey也是相同
+     */
     CacheKey key1 = new CacheKey();
     CacheKey key2 = new CacheKey();
     assertEquals(key1, key2);
@@ -92,6 +104,9 @@ public class CacheKeyTest {
 
   @Test (expected = NotSerializableException.class)
   public void serializationExceptionTest() throws Exception {
+    /**
+     * 测试 如果保存的参数是不可以序列化的，那么会抛出异常
+     */
     CacheKey cacheKey = new CacheKey();
     cacheKey.update(new Object());
     serialize(cacheKey);
@@ -99,6 +114,9 @@ public class CacheKeyTest {
 
   @Test
   public void serializationTest() throws Exception {
+    /**
+     * 测试 序列化和返序列化后是同一个对象
+     */
     CacheKey cacheKey = new CacheKey();
     cacheKey.update("serializable");
     Assert.assertEquals(cacheKey, serialize(cacheKey));

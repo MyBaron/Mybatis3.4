@@ -18,6 +18,7 @@ package org.apache.ibatis.parsing;
 import java.util.Properties;
 
 /**
+ * 动态属性解析器
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */

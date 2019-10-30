@@ -347,27 +347,48 @@ public class PooledDataSource implements DataSource {
   protected void pushConnection(PooledConnection conn) throws SQLException {
 
     synchronized (state) {
+      /**
+       * 从活跃连接集合中移除
+       */
       state.activeConnections.remove(conn);
+      //校验连接是否可用
       if (conn.isValid()) {
+        /**
+         * 如果空闲连接集合少于核心连接数：
+         * 1.创建新的PooledConnection复用该connection
+         * 2.放到空闲连接集合
+         * 3.唤醒等待线程
+         *
+         * 否则：
+         * 关闭该连接
+         *
+         */
         if (state.idleConnections.size() < poolMaximumIdleConnections && conn.getConnectionTypeCode() == expectedConnectionTypeCode) {
+          //统计连接执行时间总耗时
           state.accumulatedCheckoutTime += conn.getCheckoutTime();
+          //回滚未提交的事务
           if (!conn.getRealConnection().getAutoCommit()) {
             conn.getRealConnection().rollback();
           }
+          //创建一个新的PooledConnection对象
           PooledConnection newConn = new PooledConnection(conn.getRealConnection(), this);
+          //添加到空间连接集合中
           state.idleConnections.add(newConn);
           newConn.setCreatedTimestamp(conn.getCreatedTimestamp());
           newConn.setLastUsedTimestamp(conn.getLastUsedTimestamp());
+          // 将原连接置为无效状态
           conn.invalidate();
           if (log.isDebugEnabled()) {
             log.debug("Returned connection " + newConn.getRealHashCode() + " to pool.");
           }
+          //唤醒等待的线程
           state.notifyAll();
         } else {
           state.accumulatedCheckoutTime += conn.getCheckoutTime();
           if (!conn.getRealConnection().getAutoCommit()) {
             conn.getRealConnection().rollback();
           }
+          //关闭连接
           conn.getRealConnection().close();
           if (log.isDebugEnabled()) {
             log.debug("Closed connection " + conn.getRealHashCode() + ".");
@@ -399,6 +420,9 @@ public class PooledDataSource implements DataSource {
           }
         } else {
           // Pool does not have available connection
+          /**
+           * 如果活跃数小于最大活跃数  允许创建新的连接
+           */
           if (state.activeConnections.size() < poolMaximumActiveConnections) {
             // Can create new connection
             conn = new PooledConnection(dataSource.getConnection(), this);
@@ -407,6 +431,20 @@ public class PooledDataSource implements DataSource {
             }
           } else {
             // Cannot create new connection
+            /**
+             * 不允许创建新的连接
+             *
+             * 判断最旧活跃连接的是否已超时
+             *
+             * 如果超时：
+             * 1.记录超时
+             * 2.如果连接不是自动提交，那么就进行回滚
+             * 3.如果是自动提交，那么直接创建一个新的连接
+             *
+             * 如果未超时：
+             * 会将调用Object.wait方法等待
+             *
+             */
             PooledConnection oldestActiveConnection = state.activeConnections.get(0);
             long longestCheckoutTime = oldestActiveConnection.getCheckoutTime();
             if (longestCheckoutTime > poolMaximumCheckoutTime) {
@@ -448,6 +486,9 @@ public class PooledDataSource implements DataSource {
                   log.debug("Waiting as long as " + poolTimeToWait + " milliseconds for connection.");
                 }
                 long wt = System.currentTimeMillis();
+                /**
+                 * 睡眠等待
+                 */
                 state.wait(poolTimeToWait);
                 state.accumulatedWaitTime += System.currentTimeMillis() - wt;
               } catch (InterruptedException e) {
@@ -457,6 +498,14 @@ public class PooledDataSource implements DataSource {
           }
         }
         if (conn != null) {
+          /*
+           * 检测连接是否有效，isValid 方法除了会检测 valid 是否为 true，
+           * 还会通过 PooledConnection 的 pingConnection 方法执行 SQL 语句，
+           * 检测连接是否可用。pingConnection 方法的逻辑不复杂，大家可以自行分析。
+           * 另外，官方文档在介绍 POOLED 类型数据源时，也介绍了连接有效性检测方面的
+           * 属性，有三个：poolPingQuery，poolPingEnabled 和
+           * poolPingConnectionsNotUsedFor。关于这三个属性，大家可以查阅官方文档
+           */
           // ping to server and check the connection is valid or not
           if (conn.isValid()) {
             if (!conn.getRealConnection().getAutoCommit()) {

@@ -592,7 +592,7 @@ public class Configuration {
       executor = new CachingExecutor(executor);
     }
 
-    //此处调用插件
+    //此处构建executor的插件代理类
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }

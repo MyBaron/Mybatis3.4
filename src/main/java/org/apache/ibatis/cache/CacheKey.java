@@ -30,14 +30,29 @@ public class CacheKey implements Cloneable, Serializable {
 
   public static final CacheKey NULL_CACHE_KEY = new NullCacheKey();
 
+  /**
+   * 乘子，默认为37
+   */
   private static final int DEFAULT_MULTIPLYER = 37;
+  /**
+   * CacheKey 的 hashCode，综合了各种影响因子
+   */
   private static final int DEFAULT_HASHCODE = 17;
 
   private final int multiplier;
   private int hashcode;
+  /**
+   * 校验和
+   */
   private long checksum;
+  /**
+   * 影响因子个数
+   */
   private int count;
   // 8/21/2017 - Sonarlint flags this as needing to be marked transient.  While true if content is not serializable, this is not always true and thus should not be marked transient.
+  /**
+   * 影响因子集合
+   */
   private List<Object> updateList;
 
   public CacheKey() {

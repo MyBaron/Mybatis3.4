@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * todo
+ * InterceptorChain 是什么时候初始化的
  * @author Clinton Begin
  */
 public class InterceptorChain {

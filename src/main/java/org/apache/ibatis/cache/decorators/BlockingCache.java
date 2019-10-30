@@ -93,6 +93,7 @@ public class BlockingCache implements Cache {
   
   private ReentrantLock getLockForKey(Object key) {
     ReentrantLock lock = new ReentrantLock();
+    //不存在则插入
     ReentrantLock previous = locks.putIfAbsent(key, lock);
     return previous == null ? lock : previous;
   }

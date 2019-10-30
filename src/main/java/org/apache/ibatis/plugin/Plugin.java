@@ -41,8 +41,18 @@ public class Plugin implements InvocationHandler {
   }
 
   public static Object wrap(Object target, Interceptor interceptor) {
+    /*
+     * 获取插件类 @Signature 注解内容，并生成相应的映射结构。形如下面：
+     * {
+     *     Executor.class : [query, update, commit],
+     *     ParameterHandler.class : [getParameterObject, setParameters]
+     * }
+     */
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
     Class<?> type = target.getClass();
+    /**
+     * 判断被代理对象是否有插件类
+     */
     Class<?>[] interfaces = getAllInterfaces(type, signatureMap);
     if (interfaces.length > 0) {
       return Proxy.newProxyInstance(
@@ -56,10 +66,17 @@ public class Plugin implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
+      /*
+       * 获取被拦截方法列表，比如：
+       *    signatureMap.get(Executor.class)，可能返回 [query, update, commit]
+       */
       Set<Method> methods = signatureMap.get(method.getDeclaringClass());
+      // 检测方法列表是否包含被拦截的方法
       if (methods != null && methods.contains(method)) {
+        // 执行插件逻辑
         return interceptor.intercept(new Invocation(target, method, args));
       }
+      // 执行被拦截的方法
       return method.invoke(target, args);
     } catch (Exception e) {
       throw ExceptionUtil.unwrapThrowable(e);
@@ -67,12 +84,27 @@ public class Plugin implements InvocationHandler {
   }
 
   private static Map<Class<?>, Set<Method>> getSignatureMap(Interceptor interceptor) {
+    //获取@Intercepts注解对象
     Intercepts interceptsAnnotation = interceptor.getClass().getAnnotation(Intercepts.class);
     // issue #251
     if (interceptsAnnotation == null) {
       throw new PluginException("No @Intercepts annotation was found in interceptor " + interceptor.getClass().getName());      
     }
+
+    /**
+     * 获取@Intercepts的值，是Signature对象数组
+     * Signature对象有3个参数
+     * Class<?> type(); 被代理类的类型
+     *
+     * String method(); 被代理的方法
+     *
+     * Class<?>[] args(); 方法的传入参数的类型
+     *
+     */
     Signature[] sigs = interceptsAnnotation.value();
+    /**
+     * 存储类对应的代理方法
+     */
     Map<Class<?>, Set<Method>> signatureMap = new HashMap<Class<?>, Set<Method>>();
     for (Signature sig : sigs) {
       Set<Method> methods = signatureMap.get(sig.type());

@@ -16,6 +16,9 @@
 package org.apache.ibatis.parsing;
 
 /**
+ * 通用的 Token 解析器
+ * 就是解析openToken 和closeToken 里面的内容，然后调用TokenHandler实现类处理
+ * 例如${username} 会解析出username
  * @author Clinton Begin
  */
 public class GenericTokenParser {

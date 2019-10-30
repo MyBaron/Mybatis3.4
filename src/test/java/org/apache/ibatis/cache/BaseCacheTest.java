@@ -29,8 +29,23 @@ import java.util.Set;
 
 public class BaseCacheTest {
 
+
+  /**
+   * 映射语句文件中的所有 select 语句的结果将会被缓存。
+   * 映射语句文件中的所有 insert、update 和 delete 语句会刷新缓存。
+   * 缓存会使用最近最少使用算法（LRU, Least Recently Used）算法来清除不需要的缓存。
+   * 缓存不会定时进行刷新（也就是说，没有刷新间隔）。
+   * 缓存会保存列表或对象（无论查询方法返回哪种）的 1024 个引用。
+   * 缓存会被视为读/写缓存，这意味着获取到的对象并不是共享的，可以安全地被调用者修改，而不干扰其他调用者或线程所做的潜在修改。
+   */
+
   @Test
   public void shouldDemonstrateEqualsAndHashCodeForVariousCacheTypes() {
+    /**
+     * PerpetualCache
+     *
+     * 实现 Cache 接口，永不过期的 Cache 实现类，基于 HashMap 实现类
+     */
     PerpetualCache cache = new PerpetualCache("test_cache");
     assertTrue(cache.equals(cache));
     assertTrue(cache.equals(new SynchronizedCache(cache)));

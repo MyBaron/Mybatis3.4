@@ -31,6 +31,10 @@ public class UnpooledDataSourceTest {
   @Test
   public void shouldNotRegisterTheSameDriverMultipleTimes() throws Exception {
     // https://code.google.com/p/mybatis/issues/detail?id=430
+    /**
+     * 测试 加载驱动
+     * UnpooledDataSource$getConnection方法中，会调用initializeDriver()初始化驱动
+     */
     UnpooledDataSource dataSource = null;
     dataSource = new UnpooledDataSource("org.hsqldb.jdbcDriver", "jdbc:hsqldb:mem:multipledrivers", "sa", "");
     dataSource.getConnection();
