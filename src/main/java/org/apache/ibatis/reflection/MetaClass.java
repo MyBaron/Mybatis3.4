@@ -27,6 +27,7 @@ import org.apache.ibatis.reflection.invoker.MethodInvoker;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
+ * 类的元数据，基于 Reflector 和 PropertyTokenizer ，提供对指定类的各种骚操作
  * @author Clinton Begin
  */
 public class MetaClass {
@@ -53,6 +54,16 @@ public class MetaClass {
     return prop.length() > 0 ? prop.toString() : null;
   }
 
+  /**
+   * 通常用于根据列名称 找到对应的类属性
+   * 处理逻辑：
+   * 1. 是去掉列名称的_
+   * 2. 将1得到的字符串转成大写
+   * 3. 从Reflector对象caseInsensitivePropertyMap中找到对应的属性名称
+   * @param name
+   * @param useCamelCaseMapping
+   * @return
+   */
   public String findProperty(String name, boolean useCamelCaseMapping) {
     if (useCamelCaseMapping) {
       name = name.replace("_", "");
@@ -132,6 +143,11 @@ public class MetaClass {
     return null;
   }
 
+  /**
+   * 判断指定属性是否有 getting 方法
+   * @param name
+   * @return
+   */
   public boolean hasSetter(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {

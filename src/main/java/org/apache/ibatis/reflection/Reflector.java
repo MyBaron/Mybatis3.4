@@ -39,6 +39,7 @@ import org.apache.ibatis.reflection.invoker.SetFieldInvoker;
 import org.apache.ibatis.reflection.property.PropertyNamer;
 
 /**
+ * Reflector 会缓存反射操作需要的类的信息，例如：构造方法、属性名、setting / getting 方法等等
  * This class represents a cached set of class definition information that
  * allows for easy mapping between property names and getter/setter methods.
  *
@@ -46,23 +47,71 @@ import org.apache.ibatis.reflection.property.PropertyNamer;
  */
 public class Reflector {
 
+  /**
+   * 对应的类
+   */
   private final Class<?> type;
+  /**
+   * 可读属性数组
+   */
   private final String[] readablePropertyNames;
+  /**
+   * 可写属性集合
+   */
   private final String[] writeablePropertyNames;
+  /**
+   * 属性对应的 setting 方法的映射。
+   *
+   * key 为属性名称
+   * value 为 Invoker 对象
+   */
   private final Map<String, Invoker> setMethods = new HashMap<String, Invoker>();
+  /**
+   * 属性对应的 getting 方法的映射。
+   *
+   * key 为属性名称
+   * value 为 Invoker 对象
+   */
   private final Map<String, Invoker> getMethods = new HashMap<String, Invoker>();
+  /**
+   * 属性对应的 setting 方法的方法参数类型的映射。{@link #setMethods}
+   *
+   * key 为属性名称
+   * value 为方法参数类型
+   */
   private final Map<String, Class<?>> setTypes = new HashMap<String, Class<?>>();
+  /**
+   * 属性对应的 getting 方法的返回值类型的映射。{@link #getMethods}
+   *
+   * key 为属性名称
+   * value 为返回值的类型
+   */
   private final Map<String, Class<?>> getTypes = new HashMap<String, Class<?>>();
+  /**
+   * 默认构造方法
+   */
   private Constructor<?> defaultConstructor;
-
+  /**
+   * 不区分大小写的属性集合
+   */
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<String, String>();
 
+  /**
+   * 将一个类剖析，将其构造方法，参数，get/set方法存储在Reflector对象中
+   * @param clazz
+   */
   public Reflector(Class<?> clazz) {
+    // 设置对应的类
     type = clazz;
+    // <1> 初始化 defaultConstructor 找出一个默认的构造方法
     addDefaultConstructor(clazz);
+    // <2> // 初始化 getMethods 和 getTypes ，通过遍历 getting 方法，此处会解决父子类重写会出现名称重复问题
     addGetMethods(clazz);
+    // <3> // 初始化 setMethods 和 setTypes ，通过遍历 setting 方法。
     addSetMethods(clazz);
+    // <4> // 初始化 getMethods + getTypes 和 setMethods + setTypes ，通过遍历 fields 属性。
     addFields(clazz);
+    // <5> 初始化 readablePropertyNames、writeablePropertyNames、caseInsensitivePropertyMap 属性
     readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
     writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
     for (String propName : readablePropertyNames) {
@@ -77,6 +126,7 @@ public class Reflector {
     Constructor<?>[] consts = clazz.getDeclaredConstructors();
     for (Constructor<?> constructor : consts) {
       if (constructor.getParameterTypes().length == 0) {
+        //是否可以访问私有方法
         if (canAccessPrivateMethods()) {
           try {
             constructor.setAccessible(true);
@@ -93,6 +143,7 @@ public class Reflector {
 
   private void addGetMethods(Class<?> cls) {
     Map<String, List<Method>> conflictingGetters = new HashMap<String, List<Method>>();
+    //获取所有方法，也包括父类的方法
     Method[] methods = getClassMethods(cls);
     for (Method method : methods) {
       if (method.getParameterTypes().length > 0) {
@@ -105,10 +156,12 @@ public class Reflector {
         addMethodConflict(conflictingGetters, name, method);
       }
     }
+    //解决 getting 冲突方法
     resolveGetterConflicts(conflictingGetters);
   }
 
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
+    // 遍历每个属性，查找其最匹配的方法。因为子类可以覆写父类的方法，所以一个属性，可能对应多个 getting 方法
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
       String propName = entry.getKey();
@@ -234,8 +287,10 @@ public class Reflector {
     Class<?> result = null;
     if (src instanceof Class) {
       result = (Class<?>) src;
+      // 泛型类型，使用泛型
     } else if (src instanceof ParameterizedType) {
       result = (Class<?>) ((ParameterizedType) src).getRawType();
+      // 泛型数组，获得具体类
     } else if (src instanceof GenericArrayType) {
       Type componentType = ((GenericArrayType) src).getGenericComponentType();
       if (componentType instanceof Class) {
@@ -322,7 +377,7 @@ public class Reflector {
       for (Class<?> anInterface : interfaces) {
         addUniqueMethods(uniqueMethods, anInterface.getMethods());
       }
-
+      // 获得父类
       currentClass = currentClass.getSuperclass();
     }
 

@@ -25,6 +25,9 @@ import java.util.List;
 
 import org.apache.ibatis.lang.UsesJava8;
 
+/**
+ * 参数名工具类，获得构造方法、普通方法的参数列表
+ */
 @UsesJava8
 public class ParamNameUtil {
   public static List<String> getParamNames(Method method) {

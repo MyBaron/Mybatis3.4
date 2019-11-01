@@ -25,6 +25,9 @@ import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
+ * 继承 BaseWrapper 抽象类，Map 对象的 ObjectWrapper 实现类
+ *
+ * Map的对象，由MapWrapper类处理
  * @author Clinton Begin
  */
 public class MapWrapper extends BaseWrapper {

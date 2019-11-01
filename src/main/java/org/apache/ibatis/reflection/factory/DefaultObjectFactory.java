@@ -31,6 +31,7 @@ import java.util.TreeSet;
 import org.apache.ibatis.reflection.ReflectionException;
 
 /**
+ * 实现 ObjectFactory、Serializable 接口，默认 ObjectFactory 实现类
  * @author Clinton Begin
  */
 public class DefaultObjectFactory implements ObjectFactory, Serializable {
@@ -58,6 +59,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
   private  <T> T instantiateClass(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
     try {
       Constructor<T> constructor;
+      // <x1> 通过无参构造方法，创建指定类的对象
       if (constructorArgTypes == null || constructorArgs == null) {
         constructor = type.getDeclaredConstructor();
         if (!constructor.isAccessible()) {
@@ -65,6 +67,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
         }
         return constructor.newInstance();
       }
+      // <x2> 使用特定构造方法，创建指定类的对象
       constructor = type.getDeclaredConstructor(constructorArgTypes.toArray(new Class[constructorArgTypes.size()]));
       if (!constructor.isAccessible()) {
         constructor.setAccessible(true);

@@ -26,6 +26,9 @@ import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 
 /**
+ * todo 需要学习java.lang.reflect.Type
+ *
+ * 当存在复杂的继承关系以及泛型定义时， TypeParameterResolver 可以帮助我们解析字段、方法参数或方法返回值的类型
  * @author Iwao AVE!
  */
 public class TypeParameterResolver {

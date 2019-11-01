@@ -18,6 +18,7 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
+ * 实现 Iterator 接口，属性分词器，支持迭代器的访问方式
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {

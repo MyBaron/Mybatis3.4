@@ -19,6 +19,7 @@ package org.apache.ibatis.reflection;
 import java.util.Arrays;
 
 /**
+ * 数组工具类
  * Provides hashCode, equals and toString methods that can handle array.
  */
 public class ArrayUtil {

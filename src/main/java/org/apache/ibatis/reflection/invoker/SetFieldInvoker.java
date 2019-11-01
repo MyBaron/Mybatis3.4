@@ -19,6 +19,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 /**
+ * 实现 Invoker 接口，设置 Field 调用者
+ *
+ * Field用于获取某个类的属性或该属性的属性值
  * @author Clinton Begin
  */
 public class SetFieldInvoker implements Invoker {

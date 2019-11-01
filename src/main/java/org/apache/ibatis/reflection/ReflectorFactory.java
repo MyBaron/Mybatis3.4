@@ -13,13 +13,31 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
+/**
+ * Reflector 工厂接口，用于创建和缓存 Reflector 对象
+ */
 package org.apache.ibatis.reflection;
 
 public interface ReflectorFactory {
 
+  /**
+   * @return 是否缓存 Reflector 对象
+   */
   boolean isClassCacheEnabled();
 
+  /**
+   * 设置是否缓存 Reflector 对象
+   *
+   * @param classCacheEnabled 是否缓存
+   */
   void setClassCacheEnabled(boolean classCacheEnabled);
 
+  /**
+   * 获取 Reflector 对象
+   *
+   * @param type 指定类
+   * @return Reflector 对象
+   */
   Reflector findForClass(Class<?> type);
 }

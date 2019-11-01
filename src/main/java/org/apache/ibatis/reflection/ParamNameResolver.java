@@ -29,6 +29,9 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
+/**
+ * 参数名解析器
+ */
 public class ParamNameResolver {
 
   private static final String GENERIC_NAME_PREFIX = "param";
@@ -48,6 +51,9 @@ public class ParamNameResolver {
    */
   private final SortedMap<Integer, String> names;
 
+  /**
+   * 是否有 {@link Param} 注解的参数
+   */
   private boolean hasParamAnnotation;
 
   public ParamNameResolver(Configuration config, Method method) {
@@ -76,6 +82,7 @@ public class ParamNameResolver {
         // @Param was not specified.
         /***
          * 是否使用参数的真实名称
+         * 默认是开启的
          */
         if (config.isUseActualParamName()) {
           name = getActualParamName(method, paramIndex);
@@ -116,6 +123,7 @@ public class ParamNameResolver {
    * In addition to the default names, this method also adds the generic names (param1, param2,
    * ...).
    * </p>
+   * 获得参数名与值的映射
    */
   public Object getNamedParams(Object[] args) {
     final int paramCount = names.size();
@@ -126,6 +134,11 @@ public class ParamNameResolver {
     } else if (!hasParamAnnotation && paramCount == 1) {
       return args[names.firstKey()];
     } else {
+      /**
+       * 此处会构建两种组合
+       * 组合 1 ：KEY：参数名，VALUE：参数值
+       * 组合 2 ：KEY：GENERIC_NAME_PREFIX + 参数顺序，VALUE ：参数值
+       */
       final Map<String, Object> param = new ParamMap<Object>();
       int i = 0;
       for (Map.Entry<Integer, String> entry : names.entrySet()) {

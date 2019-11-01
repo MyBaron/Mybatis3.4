@@ -18,6 +18,9 @@ package org.apache.ibatis.reflection.invoker;
 import java.lang.reflect.InvocationTargetException;
 
 /**
+ * todo 用途是什么
+ *
+ * 调用者接口
  * @author Clinton Begin
  */
 public interface Invoker {

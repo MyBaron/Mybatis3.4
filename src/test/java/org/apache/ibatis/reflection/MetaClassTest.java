@@ -42,6 +42,9 @@ public class MetaClassTest {
 
   @Test
   public void shouldTestDataTypeOfGenericMethod() {
+    /**
+     * 测试 默认工厂 处理元数据，将类数据解析成MetaClass对象
+     */
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     MetaClass meta = MetaClass.forClass(GenericConcrete.class, reflectorFactory);
     assertEquals(Long.class, meta.getGetterType("id"));
