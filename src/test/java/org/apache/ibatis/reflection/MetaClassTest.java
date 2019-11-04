@@ -53,6 +53,9 @@ public class MetaClassTest {
 
   @Test
   public void shouldCheckGetterExistance() {
+    /**
+     * 测试 属性对应的 getting 方法的映射。
+     */
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     MetaClass meta = MetaClass.forClass(RichType.class, reflectorFactory);
     assertTrue(meta.hasGetter("richField"));
