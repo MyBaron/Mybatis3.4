@@ -759,7 +759,7 @@ public class SqlSessionTest extends BaseDataTest {
        *
        * 这两个有什么区别呢？
        * 1. MapperMethod并没有和DefaultResultSetHandler$getRowValue冲突，相反后者是前端的互补，
-       * MapperMethod中，提供了对于ResultHandler或者是使用了@MapKey注解的方法Map,Collection,Cusror类型的转换方法。 主要是判断调用的抽象方法的返回类型是否是其中一个类型，
+       * MapperMethod中，提供了对于ResultHandler或者是使用了@MapKey注解的方法Map,Collection,Cursor类型的转换方法。 主要是判断调用的抽象方法的返回类型是否是其中一个类型，
        * 如果是，那么会进入到封装方法中，将返回的结果处理成该类型。
        *
        * 2. 对于DefaultResultSetHandler$getRowValue，其逻辑是真正地将ResultSet中的数据转成resultType或者resultMap的类型
