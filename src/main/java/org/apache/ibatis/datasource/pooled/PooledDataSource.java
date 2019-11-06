@@ -41,15 +41,36 @@ public class PooledDataSource implements DataSource {
 
   private static final Log log = LogFactory.getLog(PooledDataSource.class);
 
+  /**
+   * PoolState 对象，记录池化的状态
+   */
   private final PoolState state = new PoolState(this);
 
+  /**
+   * UnpooledDataSource 对象
+   */
   private final UnpooledDataSource dataSource;
 
   // OPTIONAL CONFIGURATION FIELDS
+  /**
+   * 在任意时间可以存在的活动（也就是正在使用）连接数量
+   */
   protected int poolMaximumActiveConnections = 10;
+  /**
+   * 任意时间可能存在的空闲连接数
+   */
   protected int poolMaximumIdleConnections = 5;
+  /**
+   * 在被强制返回之前，池中连接被检出（checked out）时间。单位：毫秒
+   */
   protected int poolMaximumCheckoutTime = 20000;
+  /**
+   * 这是一个底层设置，如果获取连接花费了相当长的时间，连接池会打印状态日志并重新尝试获取一个连接（避免在误配置的情况下一直安静的失败）。单位：毫秒
+   */
   protected int poolTimeToWait = 20000;
+  /**
+   * 这是一个关于坏连接容忍度的底层设置，作用于每一个尝试从缓存池获取连接的线程. 如果这个线程获取到的是一个坏的连接，那么这个数据源允许这个线程尝试重新获取一个新的连接，但是这个重新尝试的次数不应该超过 poolMaximumIdleConnections 与 poolMaximumLocalBadConnectionTolerance 之和。
+   */
   protected int poolMaximumLocalBadConnectionTolerance = 3;
   protected String poolPingQuery = "NO PING QUERY SET";
   protected boolean poolPingEnabled;
@@ -372,7 +393,7 @@ public class PooledDataSource implements DataSource {
           }
           //创建一个新的PooledConnection对象
           PooledConnection newConn = new PooledConnection(conn.getRealConnection(), this);
-          //添加到空间连接集合中
+          //添加到空闲连接集合中
           state.idleConnections.add(newConn);
           newConn.setCreatedTimestamp(conn.getCreatedTimestamp());
           newConn.setLastUsedTimestamp(conn.getLastUsedTimestamp());

@@ -40,13 +40,20 @@ public class UnpooledDataSource implements DataSource {
   private ClassLoader driverClassLoader;
   private Properties driverProperties;
   private static Map<String, Driver> registeredDrivers = new ConcurrentHashMap<String, Driver>();
-
+  /**
+   * Driver 类加载器
+   */
   private String driver;
   private String url;
   private String username;
   private String password;
-
+  /**
+   * 是否自动提交事务
+   */
   private Boolean autoCommit;
+  /**
+   * 默认事务隔离级别
+   */
   private Integer defaultTransactionIsolationLevel;
 
   static {
