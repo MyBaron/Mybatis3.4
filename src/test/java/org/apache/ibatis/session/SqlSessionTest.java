@@ -416,7 +416,7 @@ public class SqlSessionTest extends BaseDataTest {
       assertEquals(1, updates);
       updated = session.selectOne("org.apache.ibatis.domain.blog.mappers.AuthorMapper.selectAuthor", 101);
       assertEquals(original.getEmail(), updated.getEmail());
-      //自动提交
+      //主动提交
       session.commit();
     } finally {
       session.close();
