@@ -52,18 +52,26 @@ public class MapperRegistry {
       throw new BindingException("Error getting mapper instance. Cause: " + e, e);
     }
   }
-  
+
   public <T> boolean hasMapper(Class<T> type) {
     return knownMappers.containsKey(type);
   }
 
+  /**
+   * 扫描指定包，并将符合的类，添加到 knownMappers 中
+   * @param type
+   * @param <T>
+   */
   public <T> void addMapper(Class<T> type) {
+    // <1> 判断，必须是接口。
     if (type.isInterface()) {
+      // <2> 已经添加过，则抛出 BindingException 异常
       if (hasMapper(type)) {
         throw new BindingException("Type " + type + " is already known to the MapperRegistry.");
       }
       boolean loadCompleted = false;
       try {
+        // <3> 添加到 knownMappers 中
         knownMappers.put(type, new MapperProxyFactory<T>(type));
         // It's important that the type is added before the parser is run
         // otherwise the binding may automatically be attempted by the
@@ -104,5 +112,5 @@ public class MapperRegistry {
   public void addMappers(String packageName) {
     addMappers(packageName, Object.class);
   }
-  
+
 }

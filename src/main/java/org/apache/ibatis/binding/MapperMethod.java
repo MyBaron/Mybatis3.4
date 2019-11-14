@@ -36,12 +36,19 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 /**
+ * 在调用 SqlSession 相应方法执行数据库操作时，需要指定映射文件中定义的 SQL 节点，
+ * 如果出现拼写错误，我们只能在运行时才能发现相应的异常。
+ * 为了尽早发现这种错误，MyBatis 通过 Binding 模块，将用户自定义的 Mapper 接口与映射配置文件关联起来，
+ * 系统可以通过调用自定义 Mapper 接口中的方法执行相应的 SQL 语句完成数据库操作，从而避免上述问题
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Lasse Voss
  */
 public class MapperMethod {
 
+  /**
+   * SQL 命令类型
+   */
   private final SqlCommand command;
   private final MethodSignature method;
 
@@ -56,7 +63,6 @@ public class MapperMethod {
      *
      *
      * 为什么需要处理参数，在初始化MethodSignature对象时已经处理参数了？
-     *
      * MethodSignature初始化时处理参数仅仅是处理带有@Param注解时的处理，构建参数的index以及@Param的value的映射
      * 在MethodSignature$convertArgsToSqlCommandParam的
      */
@@ -101,7 +107,7 @@ public class MapperMethod {
         throw new BindingException("Unknown execution method for: " + command.getName());
     }
     if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
-      throw new BindingException("Mapper method '" + command.getName() 
+      throw new BindingException("Mapper method '" + command.getName()
           + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
     }
     return result;
@@ -234,9 +240,12 @@ public class MapperMethod {
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
       final String methodName = method.getName();
       final Class<?> declaringClass = method.getDeclaringClass();
+      // <1> 获得 MappedStatement 对象
       MappedStatement ms = resolveMappedStatement(mapperInterface, methodName, declaringClass,
           configuration);
+      // <2> 找不到 MappedStatement
       if (ms == null) {
+        // 如果有 @Flush 注解，则标记为 FLUSH 类型
         if (method.getAnnotation(Flush.class) != null) {
           name = null;
           type = SqlCommandType.FLUSH;
@@ -244,6 +253,7 @@ public class MapperMethod {
           throw new BindingException("Invalid bound statement (not found): "
               + mapperInterface.getName() + "." + methodName);
         }
+        // <3> 找到 MappedStatement
       } else {
         name = ms.getId();
         type = ms.getSqlCommandType();
