@@ -28,8 +28,9 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 
 /**
+ * 虚拟文件系统( Virtual File System )抽象类，用来查找指定路径下的的文件们
  * Provides a very simple API for accessing resources within an application server.
- * 
+ *
  * @author Ben Gunter
  */
 public abstract class VFS {
@@ -92,7 +93,7 @@ public abstract class VFS {
   /**
    * Adds the specified class to the list of {@link VFS} implementations. Classes added in this
    * manner are tried in the order they are added and before any of the built-in implementations.
-   * 
+   *
    * @param clazz The {@link VFS} implementation class to add.
    */
   public static void addImplClass(Class<? extends VFS> clazz) {
@@ -116,7 +117,7 @@ public abstract class VFS {
 
   /**
    * Get a method by name and parameter types. If the method is not found then return null.
-   * 
+   *
    * @param clazz The class to which the method belongs.
    * @param methodName The name of the method.
    * @param parameterTypes The types of the parameters accepted by the method.
@@ -138,7 +139,7 @@ public abstract class VFS {
 
   /**
    * Invoke a method on an object and return whatever it returns.
-   * 
+   *
    * @param method The method to invoke.
    * @param object The instance or class (for static methods) on which to invoke the method.
    * @param parameters The parameters to pass to the method.
@@ -167,7 +168,7 @@ public abstract class VFS {
   /**
    * Get a list of {@link URL}s from the context classloader for all the resources found at the
    * specified path.
-   * 
+   *
    * @param path The resource path.
    * @return A list of {@link URL}s, as returned by {@link ClassLoader#getResources(String)}.
    * @throws IOException If I/O errors occur
@@ -182,7 +183,7 @@ public abstract class VFS {
   /**
    * Recursively list the full resource path of all the resources that are children of the
    * resource identified by a URL.
-   * 
+   *
    * @param url The URL that identifies the resource to list.
    * @param forPath The path to the resource that is identified by the URL. Generally, this is the
    *            value passed to {@link #getResources(String)} to get the resource URL.
@@ -194,7 +195,7 @@ public abstract class VFS {
   /**
    * Recursively list the full resource path of all the resources that are children of all the
    * resources found at the specified path.
-   * 
+   *
    * @param path The path of the resource(s) to list.
    * @return A list containing the names of the child resources.
    * @throws IOException If I/O errors occur

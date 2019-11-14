@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 import org.apache.ibatis.type.BaseTypeHandlerTest;
 import org.apache.ibatis.type.LocalDateTimeTypeHandler;
@@ -82,5 +83,11 @@ public class LocalDateTimeTypeHandlerTest extends BaseTypeHandlerTest {
     when(cs.getTimestamp(1)).thenReturn(null);
     when(cs.wasNull()).thenReturn(true);
     assertNull(TYPE_HANDLER.getResult(cs, 1));
+  }
+
+  @Test
+  public void test1() {
+    Timestamp timestamp = new Timestamp(new Date().getTime());
+    System.out.println(timestamp.getTime());
   }
 }
