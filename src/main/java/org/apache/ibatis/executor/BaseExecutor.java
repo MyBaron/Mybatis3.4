@@ -165,6 +165,7 @@ public abstract class BaseExecutor implements Executor {
        */
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
+        //处理存储过程的情况
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
         //查询数据库
@@ -265,6 +266,11 @@ public abstract class BaseExecutor implements Executor {
     if (!closed) {
       try {
         clearLocalCache();
+        /**
+         *  此处很重要！！
+         *  当Executor是ReuseExecutor时，会清楚缓存的Statement
+         *  当Executor时BatchExecutor时，会支持批量操作
+         */
         flushStatements(true);
       } finally {
         if (required) {
@@ -337,6 +343,7 @@ public abstract class BaseExecutor implements Executor {
     List<E> list;
     // 向缓存中存储一个占位符
     // PerpetualCache对象
+    //此处的占位符，和延迟加载有关，后续可见 DeferredLoad#canLoad() 方法
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
@@ -363,7 +370,7 @@ public abstract class BaseExecutor implements Executor {
   public void setExecutorWrapper(Executor wrapper) {
     this.wrapper = wrapper;
   }
-  
+
   private static class DeferredLoad {
 
     private final MetaObject resultObject;

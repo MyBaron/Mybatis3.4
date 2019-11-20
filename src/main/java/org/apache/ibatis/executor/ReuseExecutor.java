@@ -34,6 +34,9 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 执行update或select，以sql作为key查找Statement对象，存在就使用，不存在就创建，
+ * 用完后，不关闭Statement对象，而是放置于Map<String, Statement>内，供下一次使用。
+ * （可以是Statement或PrepareStatement对象）
  * @author Clinton Begin
  */
 public class ReuseExecutor extends BaseExecutor {

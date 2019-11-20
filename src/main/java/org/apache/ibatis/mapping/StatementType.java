@@ -16,6 +16,9 @@
 package org.apache.ibatis.mapping;
 
 /**
+ * 1、STATEMENT:直接操作sql，不进行预编译，获取数据：$—Statement
+ * 2、PREPARED:预处理，参数，进行预编译，获取数据：#—–PreparedStatement:默认
+ * 3、CALLABLE:执行存储过程————CallableStatement
  * @author Clinton Begin
  */
 public enum StatementType {

@@ -193,7 +193,6 @@ public class DefaultResultSetHandler implements ResultSetHandler {
      * ResultMap 是什么？
      *   结果映射
      *   MappedStatement存储初始化的时候处理<mapper></mapper>的内容
-     *
      */
 
     List<ResultMap> resultMaps = mappedStatement.getResultMaps();

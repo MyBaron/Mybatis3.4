@@ -36,6 +36,7 @@ import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * Jdbc3KeyGenerator 类的主键，是在 SQL 执行后，才生成
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
@@ -50,10 +51,12 @@ public class Jdbc3KeyGenerator implements KeyGenerator {
   @Override
   public void processBefore(Executor executor, MappedStatement ms, Statement stmt, Object parameter) {
     // do nothing
+    // 空实现。因为对于 Jdbc3KeyGenerator 类的主键，是在 SQL 执行后，才生成
   }
 
   @Override
   public void processAfter(Executor executor, MappedStatement ms, Statement stmt, Object parameter) {
+    //处理返回的自增主键。单个 parameter 参数，可以认为是批量的一个特例
     processBatch(ms, stmt, getParameters(parameter));
   }
 
